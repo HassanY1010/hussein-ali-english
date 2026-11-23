@@ -144,7 +144,18 @@ ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.enrollments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.lesson_progress ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies
+-- Drop existing policies first so migration is idempotent
+DROP POLICY IF EXISTS "Public can view published courses" ON public.courses;
+DROP POLICY IF EXISTS "Public can view published lessons of published courses" ON public.lessons;
+DROP POLICY IF EXISTS "Public can view categories" ON public.categories;
+DROP POLICY IF EXISTS "Public can view levels" ON public.levels;
+DROP POLICY IF EXISTS "Public can view site settings" ON public.site_settings;
+DROP POLICY IF EXISTS "Admins full access to courses" ON public.courses;
+DROP POLICY IF EXISTS "Admins full access to lessons" ON public.lessons;
+DROP POLICY IF EXISTS "Admins full access to categories" ON public.categories;
+DROP POLICY IF EXISTS "Admins full access to levels" ON public.levels;
+DROP POLICY IF EXISTS "Admins full access to settings" ON public.site_settings;
+
 -- Public read access for published courses & lessons
 CREATE POLICY "Public can view published courses" ON public.courses
   FOR SELECT USING (is_published = true);

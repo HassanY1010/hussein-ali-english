@@ -13,15 +13,19 @@ services:
         value: 20.18.0
       - key: NEXT_PUBLIC_SITE_URL
         value: https://hussein-ali-english.onrender.com
-      - key: NEXT_PUBLIC_SUPABASE_URL
+      - key: DATABASE_URL
         sync: false
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        value: https://zdblonotcfidescgedfp.supabase.co
       - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
+      - key: NEXT_PUBLIC_STORAGE_BUCKET
+        value: uploads
       - key: ADMIN_EMAIL
         value: admin@husseinali.com
       - key: ADMIN_PASSWORD
-        generateValue: true
+        value: HusseinAli2026!
       - key: ADMIN_SESSION_SECRET
         generateValue: true

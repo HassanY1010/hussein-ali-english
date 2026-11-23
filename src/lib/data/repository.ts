@@ -8,7 +8,7 @@ import {
   defaultLessons,
   defaultSiteSettings,
 } from "./default-data";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { getDbPool } from "@/lib/db";
 
 interface LocalStore {
   categories: Category[];
@@ -34,7 +34,7 @@ function getLocalStore(): LocalStore {
       return JSON.parse(raw);
     }
   } catch (err) {
-    console.error("Error reading local store, falling back to defaults:", err);
+    console.error("Error reading local store:", err);
   }
 
   const initialStore: LocalStore = {
@@ -64,25 +64,18 @@ function saveLocalStore(store: LocalStore) {
   }
 }
 
-function isSupabaseConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
-  );
-}
-
 // ----------------------------------------------------------------------
-// Unified Repository Operations
+// Repository Operations with Direct PostgreSQL & Local Fallback
 // ----------------------------------------------------------------------
 
 export async function getSiteSettings(): Promise<SiteSettings> {
-  const supabase = createAdminClient();
-  if (supabase && isSupabaseConfigured()) {
+  const pool = getDbPool();
+  if (pool) {
     try {
-      const { data, error } = await supabase.from("site_settings").select("*").limit(1).single();
-      if (!error && data) return data as SiteSettings;
-    } catch {
-      // fallback to store
+      const res = await pool.query("SELECT * FROM public.site_settings LIMIT 1");
+      if (res.rows.length > 0) return res.rows[0] as SiteSettings;
+    } catch (e) {
+      console.warn("DB getSiteSettings fallback:", e);
     }
   }
 
@@ -91,19 +84,19 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 }
 
 export async function updateSiteSettings(settingsUpdate: Partial<SiteSettings>): Promise<SiteSettings> {
-  const supabase = createAdminClient();
-  if (supabase && isSupabaseConfigured()) {
+  const pool = getDbPool();
+  if (pool) {
     try {
       const current = await getSiteSettings();
-      const { data, error } = await supabase
-        .from("site_settings")
-        .update({ ...settingsUpdate, updated_at: new Date().toISOString() })
-        .eq("id", current.id)
-        .select()
-        .single();
-      if (!error && data) return data as SiteSettings;
-    } catch {
-      // fallback
+      const fields = Object.keys(settingsUpdate);
+      const values = Object.values(settingsUpdate);
+
+      const setClause = fields.map((f, i) => `${f} = $${i + 1}`).join(", ");
+      const query = `UPDATE public.site_settings SET ${setClause}, updated_at = NOW() WHERE id = $${fields.length + 1} RETURNING *`;
+      const res = await pool.query(query, [...values, current.id]);
+      if (res.rows.length > 0) return res.rows[0] as SiteSettings;
+    } catch (e) {
+      console.warn("DB updateSiteSettings fallback:", e);
     }
   }
 
@@ -118,16 +111,13 @@ export async function updateSiteSettings(settingsUpdate: Partial<SiteSettings>):
 }
 
 export async function getCategories(): Promise<Category[]> {
-  const supabase = createAdminClient();
-  if (supabase && isSupabaseConfigured()) {
+  const pool = getDbPool();
+  if (pool) {
     try {
-      const { data, error } = await supabase
-        .from("categories")
-        .select("*")
-        .order("order_index", { ascending: true });
-      if (!error && data && data.length > 0) return data as Category[];
-    } catch {
-      // fallback
+      const res = await pool.query("SELECT * FROM public.categories ORDER BY order_index ASC");
+      if (res.rows.length > 0) return res.rows as Category[];
+    } catch (e) {
+      console.warn("DB getCategories fallback:", e);
     }
   }
 
@@ -136,16 +126,13 @@ export async function getCategories(): Promise<Category[]> {
 }
 
 export async function getLevels(): Promise<Level[]> {
-  const supabase = createAdminClient();
-  if (supabase && isSupabaseConfigured()) {
+  const pool = getDbPool();
+  if (pool) {
     try {
-      const { data, error } = await supabase
-        .from("levels")
-        .select("*")
-        .order("order_index", { ascending: true });
-      if (!error && data && data.length > 0) return data as Level[];
-    } catch {
-      // fallback
+      const res = await pool.query("SELECT * FROM public.levels ORDER BY order_index ASC");
+      if (res.rows.length > 0) return res.rows as Level[];
+    } catch (e) {
+      console.warn("DB getLevels fallback:", e);
     }
   }
 
@@ -161,43 +148,61 @@ export async function getCourses(options?: {
 }): Promise<Course[]> {
   const categories = await getCategories();
   const levels = await getLevels();
-  const store = getLocalStore();
-
-  const supabase = createAdminClient();
+  const pool = getDbPool();
   let coursesList: Course[] = [];
 
-  if (supabase && isSupabaseConfigured()) {
+  if (pool) {
     try {
-      let query = supabase.from("courses").select("*").order("order_index", { ascending: true });
+      let sql = "SELECT * FROM public.courses";
+      const params: any[] = [];
       if (options?.publishedOnly) {
-        query = query.eq("is_published", true);
+        sql += " WHERE is_published = true";
       }
-      const { data, error } = await query;
-      if (!error && data && data.length > 0) {
-        coursesList = data as Course[];
-      } else {
-        coursesList = store.courses;
+      sql += " ORDER BY order_index ASC";
+      const res = await pool.query(sql, params);
+      if (res.rows.length > 0) {
+        coursesList = res.rows as Course[];
       }
-    } catch {
-      coursesList = store.courses;
+    } catch (e) {
+      console.warn("DB getCourses fallback:", e);
     }
-  } else {
+  }
+
+  if (coursesList.length === 0) {
+    const store = getLocalStore();
     coursesList = store.courses;
   }
 
-  // Attach relational data & count lessons
+  // Count lessons for each course
+  let lessonCounts: Record<string, number> = {};
+  if (pool) {
+    try {
+      const lRes = await pool.query(
+        "SELECT course_id, COUNT(*) as count FROM public.lessons" +
+          (options?.publishedOnly ? " WHERE is_published = true" : "") +
+          " GROUP BY course_id"
+      );
+      lRes.rows.forEach((r) => {
+        lessonCounts[r.course_id] = parseInt(r.count, 10);
+      });
+    } catch {}
+  } else {
+    const store = getLocalStore();
+    store.lessons.forEach((l) => {
+      if (!options?.publishedOnly || l.is_published) {
+        lessonCounts[l.course_id] = (lessonCounts[l.course_id] || 0) + 1;
+      }
+    });
+  }
+
   let result = coursesList.map((c) => {
     const level = levels.find((l) => l.id === c.level_id);
     const category = categories.find((cat) => cat.id === c.category_id);
-    const lessonsCount = store.lessons.filter(
-      (l) => l.course_id === c.id && (!options?.publishedOnly || l.is_published)
-    ).length;
-
     return {
       ...c,
       level,
       category,
-      lessons_count: lessonsCount,
+      lessons_count: lessonCounts[c.id] || 0,
     };
   });
 
@@ -231,40 +236,35 @@ export async function getCourseBySlug(
   options?: { publishedOnly?: boolean }
 ): Promise<Course | null> {
   const courses = await getCourses(options);
-  const found = courses.find((c) => c.slug === slug);
-  return found || null;
+  return courses.find((c) => c.slug === slug) || null;
 }
 
 export async function getCourseById(id: string): Promise<Course | null> {
   const courses = await getCourses();
-  const found = courses.find((c) => c.id === id);
-  return found || null;
+  return courses.find((c) => c.id === id) || null;
 }
 
 export async function getCourseLessons(
   courseId: string,
   options?: { publishedOnly?: boolean }
 ): Promise<Lesson[]> {
-  const store = getLocalStore();
-  const supabase = createAdminClient();
-
-  if (supabase && isSupabaseConfigured()) {
+  const pool = getDbPool();
+  if (pool) {
     try {
-      let query = supabase
-        .from("lessons")
-        .select("*")
-        .eq("course_id", courseId)
-        .order("order_index", { ascending: true });
+      let sql = "SELECT * FROM public.lessons WHERE course_id = $1";
+      const params: any[] = [courseId];
       if (options?.publishedOnly) {
-        query = query.eq("is_published", true);
+        sql += " AND is_published = true";
       }
-      const { data, error } = await query;
-      if (!error && data) return data as Lesson[];
-    } catch {
-      // fallback
+      sql += " ORDER BY order_index ASC";
+      const res = await pool.query(sql, params);
+      return res.rows as Lesson[];
+    } catch (e) {
+      console.warn("DB getCourseLessons fallback:", e);
     }
   }
 
+  const store = getLocalStore();
   let lessons = store.lessons.filter((l) => l.course_id === courseId);
   if (options?.publishedOnly) {
     lessons = lessons.filter((l) => l.is_published);
@@ -294,65 +294,86 @@ export async function getLessonBySlug(
 export async function createCourse(
   input: Omit<Course, "id" | "created_at" | "updated_at">
 ): Promise<Course> {
-  const newCourse: Course = {
-    ...input,
-    id: `course_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
-
-  const supabase = createAdminClient();
-  if (supabase && isSupabaseConfigured()) {
+  const pool = getDbPool();
+  if (pool) {
     try {
-      const { data, error } = await supabase.from("courses").insert(newCourse).select().single();
-      if (!error && data) return data as Course;
+      const res = await pool.query(
+        `INSERT INTO public.courses (
+          title, slug, short_description, description, thumbnail_url,
+          level_id, category_id, instructor_name, is_published, is_featured,
+          is_free, price, duration_hours, objectives, order_index
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        RETURNING *`,
+        [
+          input.title,
+          input.slug,
+          input.short_description,
+          input.description,
+          input.thumbnail_url,
+          input.level_id,
+          input.category_id,
+          input.instructor_name || "حسين علي",
+          input.is_published,
+          input.is_featured,
+          input.is_free,
+          input.price || 0,
+          input.duration_hours || 0,
+          JSON.stringify(input.objectives || []),
+          input.order_index || 99,
+        ]
+      );
+      if (res.rows.length > 0) return res.rows[0] as Course;
     } catch (e) {
-      console.warn("Supabase insert course failed, falling back to store:", e);
+      console.warn("DB createCourse fallback:", e);
     }
   }
 
   const store = getLocalStore();
+  const newCourse: Course = {
+    ...input,
+    id: `course_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
   store.courses.push(newCourse);
   saveLocalStore(store);
   return newCourse;
 }
 
 export async function updateCourse(id: string, updates: Partial<Course>): Promise<Course | null> {
-  const supabase = createAdminClient();
-  if (supabase && isSupabaseConfigured()) {
+  const pool = getDbPool();
+  if (pool) {
     try {
-      const { data, error } = await supabase
-        .from("courses")
-        .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq("id", id)
-        .select()
-        .single();
-      if (!error && data) return data as Course;
+      const fields = Object.keys(updates).filter((k) => k !== "id" && k !== "level" && k !== "category" && k !== "lessons_count");
+      const values = fields.map((k) => {
+        const val = (updates as any)[k];
+        return typeof val === "object" && val !== null ? JSON.stringify(val) : val;
+      });
+
+      const setClause = fields.map((f, i) => `${f} = $${i + 1}`).join(", ");
+      const query = `UPDATE public.courses SET ${setClause}, updated_at = NOW() WHERE id = $${fields.length + 1} RETURNING *`;
+      const res = await pool.query(query, [...values, id]);
+      if (res.rows.length > 0) return res.rows[0] as Course;
     } catch (e) {
-      console.warn("Supabase update course failed:", e);
+      console.warn("DB updateCourse fallback:", e);
     }
   }
 
   const store = getLocalStore();
-  const index = store.courses.findIndex((c) => c.id === id);
-  if (index === -1) return null;
-
-  store.courses[index] = {
-    ...store.courses[index],
-    ...updates,
-    updated_at: new Date().toISOString(),
-  };
+  const idx = store.courses.findIndex((c) => c.id === id);
+  if (idx === -1) return null;
+  store.courses[idx] = { ...store.courses[idx], ...updates, updated_at: new Date().toISOString() };
   saveLocalStore(store);
-  return store.courses[index];
+  return store.courses[idx];
 }
 
 export async function deleteCourse(id: string): Promise<boolean> {
-  const supabase = createAdminClient();
-  if (supabase && isSupabaseConfigured()) {
+  const pool = getDbPool();
+  if (pool) {
     try {
-      await supabase.from("courses").delete().eq("id", id);
+      await pool.query("DELETE FROM public.courses WHERE id = $1", [id]);
     } catch (e) {
-      console.warn("Supabase delete course failed:", e);
+      console.warn("DB deleteCourse fallback:", e);
     }
   }
 
@@ -370,65 +391,81 @@ export async function deleteCourse(id: string): Promise<boolean> {
 export async function createLesson(
   input: Omit<Lesson, "id" | "created_at" | "updated_at">
 ): Promise<Lesson> {
-  const newLesson: Lesson = {
-    ...input,
-    id: `lesson_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
-
-  const supabase = createAdminClient();
-  if (supabase && isSupabaseConfigured()) {
+  const pool = getDbPool();
+  if (pool) {
     try {
-      const { data, error } = await supabase.from("lessons").insert(newLesson).select().single();
-      if (!error && data) return data as Lesson;
+      const res = await pool.query(
+        `INSERT INTO public.lessons (
+          course_id, title, slug, description, video_url, video_provider,
+          duration_minutes, content_notes, resources, is_published, order_index
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        RETURNING *`,
+        [
+          input.course_id,
+          input.title,
+          input.slug,
+          input.description || "",
+          input.video_url,
+          input.video_provider || "youtube",
+          input.duration_minutes || 0,
+          input.content_notes || "",
+          JSON.stringify(input.resources || []),
+          input.is_published,
+          input.order_index || 99,
+        ]
+      );
+      if (res.rows.length > 0) return res.rows[0] as Lesson;
     } catch (e) {
-      console.warn("Supabase insert lesson failed:", e);
+      console.warn("DB createLesson fallback:", e);
     }
   }
 
   const store = getLocalStore();
+  const newLesson: Lesson = {
+    ...input,
+    id: `lesson_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
   store.lessons.push(newLesson);
   saveLocalStore(store);
   return newLesson;
 }
 
 export async function updateLesson(id: string, updates: Partial<Lesson>): Promise<Lesson | null> {
-  const supabase = createAdminClient();
-  if (supabase && isSupabaseConfigured()) {
+  const pool = getDbPool();
+  if (pool) {
     try {
-      const { data, error } = await supabase
-        .from("lessons")
-        .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq("id", id)
-        .select()
-        .single();
-      if (!error && data) return data as Lesson;
+      const fields = Object.keys(updates).filter((k) => k !== "id");
+      const values = fields.map((k) => {
+        const val = (updates as any)[k];
+        return typeof val === "object" && val !== null ? JSON.stringify(val) : val;
+      });
+
+      const setClause = fields.map((f, i) => `${f} = $${i + 1}`).join(", ");
+      const query = `UPDATE public.lessons SET ${setClause}, updated_at = NOW() WHERE id = $${fields.length + 1} RETURNING *`;
+      const res = await pool.query(query, [...values, id]);
+      if (res.rows.length > 0) return res.rows[0] as Lesson;
     } catch (e) {
-      console.warn("Supabase update lesson failed:", e);
+      console.warn("DB updateLesson fallback:", e);
     }
   }
 
   const store = getLocalStore();
-  const index = store.lessons.findIndex((l) => l.id === id);
-  if (index === -1) return null;
-
-  store.lessons[index] = {
-    ...store.lessons[index],
-    ...updates,
-    updated_at: new Date().toISOString(),
-  };
+  const idx = store.lessons.findIndex((l) => l.id === id);
+  if (idx === -1) return null;
+  store.lessons[idx] = { ...store.lessons[idx], ...updates, updated_at: new Date().toISOString() };
   saveLocalStore(store);
-  return store.lessons[index];
+  return store.lessons[idx];
 }
 
 export async function deleteLesson(id: string): Promise<boolean> {
-  const supabase = createAdminClient();
-  if (supabase && isSupabaseConfigured()) {
+  const pool = getDbPool();
+  if (pool) {
     try {
-      await supabase.from("lessons").delete().eq("id", id);
+      await pool.query("DELETE FROM public.lessons WHERE id = $1", [id]);
     } catch (e) {
-      console.warn("Supabase delete lesson failed:", e);
+      console.warn("DB deleteLesson fallback:", e);
     }
   }
 
@@ -439,35 +476,30 @@ export async function deleteLesson(id: string): Promise<boolean> {
 }
 
 export async function reorderLessons(courseId: string, orderedLessonIds: string[]): Promise<boolean> {
+  const pool = getDbPool();
+  if (pool) {
+    try {
+      for (let i = 0; i < orderedLessonIds.length; i++) {
+        await pool.query("UPDATE public.lessons SET order_index = $1 WHERE id = $2", [i + 1, orderedLessonIds[i]]);
+      }
+    } catch (e) {
+      console.warn("DB reorderLessons fallback:", e);
+    }
+  }
+
   const store = getLocalStore();
   orderedLessonIds.forEach((id, index) => {
     const l = store.lessons.find((item) => item.id === id && item.course_id === courseId);
     if (l) {
       l.order_index = index + 1;
-      l.updated_at = new Date().toISOString();
     }
   });
   saveLocalStore(store);
-
-  const supabase = createAdminClient();
-  if (supabase && isSupabaseConfigured()) {
-    try {
-      for (let i = 0; i < orderedLessonIds.length; i++) {
-        await supabase
-          .from("lessons")
-          .update({ order_index: i + 1 })
-          .eq("id", orderedLessonIds[i]);
-      }
-    } catch (e) {
-      console.warn("Supabase reorder lessons failed:", e);
-    }
-  }
-
   return true;
 }
 
 // ----------------------------------------------------------------------
-// Category & Level Management
+// Taxonomies
 // ----------------------------------------------------------------------
 
 export async function createCategory(input: {
@@ -476,6 +508,17 @@ export async function createCategory(input: {
   slug: string;
   description?: string;
 }): Promise<Category> {
+  const pool = getDbPool();
+  if (pool) {
+    try {
+      const res = await pool.query(
+        "INSERT INTO public.categories (name_ar, name_en, slug, description) VALUES ($1, $2, $3, $4) RETURNING *",
+        [input.name_ar, input.name_en, input.slug, input.description || ""]
+      );
+      if (res.rows.length > 0) return res.rows[0] as Category;
+    } catch {}
+  }
+
   const store = getLocalStore();
   const newCat: Category = {
     id: `cat_${Date.now()}`,
@@ -486,15 +529,6 @@ export async function createCategory(input: {
     order_index: store.categories.length + 1,
     created_at: new Date().toISOString(),
   };
-
-  const supabase = createAdminClient();
-  if (supabase && isSupabaseConfigured()) {
-    try {
-      const { data } = await supabase.from("categories").insert(newCat).select().single();
-      if (data) return data as Category;
-    } catch {}
-  }
-
   store.categories.push(newCat);
   saveLocalStore(store);
   return newCat;
@@ -506,6 +540,17 @@ export async function createLevel(input: {
   slug: string;
   description?: string;
 }): Promise<Level> {
+  const pool = getDbPool();
+  if (pool) {
+    try {
+      const res = await pool.query(
+        "INSERT INTO public.levels (name_ar, name_en, slug, description) VALUES ($1, $2, $3, $4) RETURNING *",
+        [input.name_ar, input.name_en, input.slug, input.description || ""]
+      );
+      if (res.rows.length > 0) return res.rows[0] as Level;
+    } catch {}
+  }
+
   const store = getLocalStore();
   const newLevel: Level = {
     id: `level_${Date.now()}`,
@@ -516,32 +561,34 @@ export async function createLevel(input: {
     order_index: store.levels.length + 1,
     created_at: new Date().toISOString(),
   };
-
-  const supabase = createAdminClient();
-  if (supabase && isSupabaseConfigured()) {
-    try {
-      const { data } = await supabase.from("levels").insert(newLevel).select().single();
-      if (data) return data as Level;
-    } catch {}
-  }
-
   store.levels.push(newLevel);
   saveLocalStore(store);
   return newLevel;
 }
 
 // ----------------------------------------------------------------------
-// Admin Dashboard Metrics
+// Admin Stats
 // ----------------------------------------------------------------------
 
 export async function getAdminStats() {
   const courses = await getCourses();
-  const store = getLocalStore();
   const publishedCourses = courses.filter((c) => c.is_published).length;
   const draftCourses = courses.length - publishedCourses;
-  const totalLessons = store.lessons.length;
   const categories = await getCategories();
   const levels = await getLevels();
+
+  let totalLessons = 0;
+  const pool = getDbPool();
+  if (pool) {
+    try {
+      const res = await pool.query("SELECT COUNT(*) FROM public.lessons");
+      totalLessons = parseInt(res.rows[0].count, 10);
+    } catch {
+      totalLessons = getLocalStore().lessons.length;
+    }
+  } else {
+    totalLessons = getLocalStore().lessons.length;
+  }
 
   return {
     totalCourses: courses.length,
