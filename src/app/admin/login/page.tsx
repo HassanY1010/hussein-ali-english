@@ -104,7 +104,7 @@ export default function AdminLoginPage() {
             href="/"
             className="text-xs text-ink-muted hover:text-ink font-semibold inline-flex items-center gap-1 transition-colors"
           >
-            <span>العودة للموقع الرئيسي</span>
+            <span>العودة للموقع الرئيسي (hussein-ali-english.onrender.com)</span>
             <ArrowLeft className="w-3.5 h-3.5" />
           </Link>
         </div>

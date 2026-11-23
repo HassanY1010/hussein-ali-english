@@ -47,14 +47,15 @@ export default async function AdminDashboardPage() {
             <span>إضافة كورس جديد</span>
           </Link>
 
-          <Link
-            href="/"
+          <a
+            href="https://hussein-ali-english.onrender.com"
             target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-sm bg-paper-100 hover:bg-paper-200 text-ink font-semibold text-xs transition-colors border border-paper-border"
           >
             <ExternalLink className="w-3.5 h-3.5" />
-            <span>عرض المنصة للطلاب</span>
-          </Link>
+            <span>عرض المنصة للطلاب (onrender.com)</span>
+          </a>
         </div>
       </div>
 

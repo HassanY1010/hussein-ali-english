@@ -72,16 +72,18 @@ export default function AdminSidebar() {
 
       {/* Footer controls */}
       <div className="p-4 border-t border-ink-soft/30 space-y-2">
-        <Link
-          href="/"
+        <a
+          href="https://hussein-ali-english.onrender.com"
           target="_blank"
+          rel="noopener noreferrer"
           className="flex items-center justify-between px-3.5 py-2 text-xs font-medium text-paper-300 hover:text-white transition-colors rounded-sm hover:bg-ink-light"
         >
           <span className="flex items-center gap-2">
             <ExternalLink className="w-3.5 h-3.5" />
-            <span>معاينة الموقع للزوار</span>
+            <span>معاينة المنصة الحية</span>
           </span>
-        </Link>
+          <span className="text-[10px] text-accent font-latin">onrender.com</span>
+        </a>
 
         <form action={logoutAdminAction}>
           <button

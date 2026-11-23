@@ -114,9 +114,18 @@ export default function Footer({ settings }: FooterProps) {
         {/* Copyright notice */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-paper-300 gap-4">
           <p>{settings.footer_text}</p>
-          <p className="font-latin ltr-text text-paper-300/80">
-            Hussein Ali English Academy • Designed for Real Learning
-          </p>
+          <div className="flex items-center gap-3">
+            <a
+              href="https://hussein-ali-english.onrender.com"
+              className="font-latin ltr-text text-accent hover:underline font-semibold"
+            >
+              https://hussein-ali-english.onrender.com
+            </a>
+            <span>•</span>
+            <span className="font-latin ltr-text text-paper-300/80">
+              Hussein Ali English Academy
+            </span>
+          </div>
         </div>
       </div>
     </footer>

@@ -1,6 +1,12 @@
 # حسين علي | أكاديمية تعلم اللغة الإنجليزية
 ### Hussein Ali English Academy
 
+🔗 **رابط المنصة الرسمي على Render**: [https://hussein-ali-english.onrender.com](https://hussein-ali-english.onrender.com)  
+🔐 **بوابة إدارة المحتوى (خاص بالأستاذ حسين)**: [https://hussein-ali-english.onrender.com/admin/login](https://hussein-ali-english.onrender.com/admin/login)  
+🩺 **فحص حالة الخادم وقاعدة البيانات**: [https://hussein-ali-english.onrender.com/api/health](https://hussein-ali-english.onrender.com/api/health)
+
+---
+
 منصة تعليمية متكاملة واحترافية لتعليم اللغة الإنجليزية لصالح الأستاذ **حسين علي**.
 تم بناء المشروع بأحدث تقنيات الويب الحديثة لتقديم تجربة تعليمية سلسة، هادئة، وخالية من المشتتات، مع لوحة تحكم إدارية خاصة بالمدرس لإدارة الكورسات والدروس، وتكامل مباشر مع قناة Telegram الرسمية.
 
@@ -75,6 +81,7 @@
 │   │   ├── actions/             # Server Actions (إدارة الكورسات، المصادقة)
 │   │   ├── auth/                # إدارة جلسات المدير المشفرة
 │   │   ├── data/                # مستودع البيانات الموحد (Supabase / Local)
+│   │   ├── db.ts                # اتصال مباشر بقاعدة بيانات PostgreSQL
 │   │   └── supabase/            # عملاء Supabase (Browser, Server, Admin)
 │   ├── middleware.ts            # حماية مسارات الإدارة
 │   └── types/                   # تعريفات TypeScript
@@ -82,8 +89,12 @@
 
 ---
 
-## 🚀 التشغيل محلياً
+## 🚀 التشغيل المباشر والإنتاج (Live Production)
 
+- **رابط المنصة المنشور**: [https://hussein-ali-english.onrender.com](https://hussein-ali-english.onrender.com)
+- **لوحة الإدارة**: [https://hussein-ali-english.onrender.com/admin](https://hussein-ali-english.onrender.com/admin)
+
+### التشغيل محلياً:
 1. تثبيت التبعات:
    ```bash
    npm install
@@ -92,13 +103,13 @@
    ```bash
    npm run dev
    ```
-3. افتح المتصفح على: [http://localhost:3000](http://localhost:3000)
+3. فتح الموقع في المتصفح: [https://hussein-ali-english.onrender.com](https://hussein-ali-english.onrender.com) أو عبر المنفذ المحلي `http://localhost:3000`.
 
 ---
 
 ## 🔐 بيانات دخول لوحة التحكم (Admin Portal)
 
-- **الرابط**: `/admin/login`
+- **الرابط**: [https://hussein-ali-english.onrender.com/admin/login](https://hussein-ali-english.onrender.com/admin/login)
 - **البريد الافتراضي**: `admin@husseinali.com`
 - **كلمة المرور الافتراضية**: `HusseinAli2026!`
 
