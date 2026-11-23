@@ -4,7 +4,8 @@ import { useFormState, useFormStatus } from "react-dom";
 import Link from "next/link";
 import { Course, Category, Level } from "@/types/database";
 import { saveCourseAction } from "@/lib/actions/courses";
-import { ArrowLeft, Save, AlertCircle, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Save, AlertCircle, CheckCircle2, Upload, Loader2 } from "lucide-react";
+import { useState } from "react";
 
 interface CourseFormProps {
   course?: Course | null;
@@ -28,9 +29,41 @@ function SubmitButton() {
 
 export default function CourseForm({ course, categories, levels }: CourseFormProps) {
   const [state, formAction] = useFormState(saveCourseAction, null);
+  const [thumbnailUrl, setThumbnailUrl] = useState(course?.thumbnail_url || "");
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const initialObjectives =
     course?.objectives?.map((o) => o.text).join("\n") || "";
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadError(null);
+
+    const data = new FormData();
+    data.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: data,
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        setUploadError(json.error || "فشل رفع الصورة");
+      } else if (json.url) {
+        setThumbnailUrl(json.url);
+      }
+    } catch (err: any) {
+      setUploadError(err.message || "حدث خطأ أثناء الرفع");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   return (
     <form action={formAction} className="space-y-6">
@@ -133,21 +166,59 @@ export default function CourseForm({ course, categories, levels }: CourseFormPro
           </div>
         </div>
 
-        {/* Thumbnail URL */}
+        {/* Thumbnail URL with Direct Supabase Storage Upload */}
         <div>
           <label className="block text-xs font-bold text-ink-soft mb-1.5">
-            رابط صورة غلاف الكورس (Thumbnail URL)
+            صورة غلاف الكورس (Thumbnail)
           </label>
-          <input
-            type="url"
-            name="thumbnail_url"
-            defaultValue={course?.thumbnail_url || ""}
-            placeholder="https://images.unsplash.com/photo-..."
-            className="w-full bg-paper-50 border border-paper-border rounded-sm px-3.5 py-2.5 text-xs text-ink focus:bg-white focus:border-accent font-latin ltr-text"
-          />
-          <p className="text-[11px] text-ink-muted mt-1">
-            يمكن وضع رابط صورة خارجية أو صورة مرفوعة على Supabase Storage.
-          </p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input
+              type="url"
+              name="thumbnail_url"
+              value={thumbnailUrl}
+              onChange={(e) => setThumbnailUrl(e.target.value)}
+              placeholder="https://... رابط الصورة"
+              className="flex-1 bg-paper-50 border border-paper-border rounded-sm px-3.5 py-2.5 text-xs text-ink focus:bg-white focus:border-accent font-latin ltr-text"
+            />
+
+            <label className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-sm bg-paper-100 hover:bg-paper-200 border border-paper-border text-xs font-semibold text-ink cursor-pointer shrink-0 transition-colors">
+              {uploading ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>جاري الرفع...</span>
+                </>
+              ) : (
+                <>
+                  <Upload className="w-3.5 h-3.5 text-accent" />
+                  <span>رفع صورة لـ Supabase</span>
+                </>
+              )}
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={handleFileUpload}
+                disabled={uploading}
+                className="hidden"
+              />
+            </label>
+          </div>
+
+          {uploadError && (
+            <p className="text-xs text-red-600 mt-1.5">{uploadError}</p>
+          )}
+
+          {thumbnailUrl && (
+            <div className="mt-2.5 flex items-center gap-3 bg-paper-50 p-2 rounded-sm border border-paper-border max-w-sm">
+              <img
+                src={thumbnailUrl}
+                alt="معاينة الغلاف"
+                className="w-16 h-10 object-cover rounded-sm border border-paper-border"
+              />
+              <span className="text-[11px] text-ink-muted truncate font-latin ltr-text flex-1">
+                {thumbnailUrl}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Short description */}

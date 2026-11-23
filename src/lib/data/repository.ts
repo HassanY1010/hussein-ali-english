@@ -10,14 +10,7 @@ import {
 } from "./default-data";
 import { getDbPool } from "@/lib/db";
 
-interface LocalStore {
-  categories: Category[];
-  levels: Level[];
-  courses: Course[];
-  lessons: Lesson[];
-  settings: SiteSettings;
-}
-
+const IS_PROD = process.env.NODE_ENV === "production";
 const STORE_PATH = path.join(process.cwd(), "data", "store.json");
 
 function ensureDirectoryExistence(filePath: string) {
@@ -27,7 +20,11 @@ function ensureDirectoryExistence(filePath: string) {
   }
 }
 
-function getLocalStore(): LocalStore {
+function getLocalStore() {
+  if (IS_PROD && process.env.DATABASE_URL) {
+    throw new Error("Local JSON store is disabled in production. PostgreSQL is the sole data source.");
+  }
+
   try {
     if (fs.existsSync(STORE_PATH)) {
       const raw = fs.readFileSync(STORE_PATH, "utf-8");
@@ -37,25 +34,20 @@ function getLocalStore(): LocalStore {
     console.error("Error reading local store:", err);
   }
 
-  const initialStore: LocalStore = {
+  return {
     categories: defaultCategories,
     levels: defaultLevels,
     courses: defaultCourses,
     lessons: defaultLessons,
     settings: defaultSiteSettings,
   };
-
-  try {
-    ensureDirectoryExistence(STORE_PATH);
-    fs.writeFileSync(STORE_PATH, JSON.stringify(initialStore, null, 2), "utf-8");
-  } catch (err) {
-    console.error("Error initializing local store file:", err);
-  }
-
-  return initialStore;
 }
 
-function saveLocalStore(store: LocalStore) {
+function saveLocalStore(store: any) {
+  if (IS_PROD && process.env.DATABASE_URL) {
+    // Never write local store in production
+    return;
+  }
   try {
     ensureDirectoryExistence(STORE_PATH);
     fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2), "utf-8");
@@ -65,7 +57,7 @@ function saveLocalStore(store: LocalStore) {
 }
 
 // ----------------------------------------------------------------------
-// Repository Operations with Direct PostgreSQL & Local Fallback
+// Production-Strict Repository Operations
 // ----------------------------------------------------------------------
 
 export async function getSiteSettings(): Promise<SiteSettings> {
@@ -74,9 +66,13 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     try {
       const res = await pool.query("SELECT * FROM public.site_settings LIMIT 1");
       if (res.rows.length > 0) return res.rows[0] as SiteSettings;
-    } catch (e) {
-      console.warn("DB getSiteSettings fallback:", e);
+      if (IS_PROD) throw new Error("Database returned empty site_settings in production.");
+    } catch (e: any) {
+      if (IS_PROD) throw new Error(`Database error in getSiteSettings: ${e.message}`);
+      console.warn("DB getSiteSettings fallback in dev mode:", e);
     }
+  } else if (IS_PROD) {
+    throw new Error("DATABASE_URL is not configured in production environment.");
   }
 
   const store = getLocalStore();
@@ -95,17 +91,17 @@ export async function updateSiteSettings(settingsUpdate: Partial<SiteSettings>):
       const query = `UPDATE public.site_settings SET ${setClause}, updated_at = NOW() WHERE id = $${fields.length + 1} RETURNING *`;
       const res = await pool.query(query, [...values, current.id]);
       if (res.rows.length > 0) return res.rows[0] as SiteSettings;
-    } catch (e) {
-      console.warn("DB updateSiteSettings fallback:", e);
+      throw new Error("Failed to update site_settings in database.");
+    } catch (e: any) {
+      if (IS_PROD) throw new Error(`Database error in updateSiteSettings: ${e.message}`);
+      console.warn("DB updateSiteSettings fallback in dev mode:", e);
     }
+  } else if (IS_PROD) {
+    throw new Error("DATABASE_URL is not configured in production environment.");
   }
 
   const store = getLocalStore();
-  store.settings = {
-    ...store.settings,
-    ...settingsUpdate,
-    updated_at: new Date().toISOString(),
-  };
+  store.settings = { ...store.settings, ...settingsUpdate, updated_at: new Date().toISOString() };
   saveLocalStore(store);
   return store.settings;
 }
@@ -116,13 +112,17 @@ export async function getCategories(): Promise<Category[]> {
     try {
       const res = await pool.query("SELECT * FROM public.categories ORDER BY order_index ASC");
       if (res.rows.length > 0) return res.rows as Category[];
-    } catch (e) {
-      console.warn("DB getCategories fallback:", e);
+      if (IS_PROD) throw new Error("No categories found in PostgreSQL database.");
+    } catch (e: any) {
+      if (IS_PROD) throw new Error(`Database error in getCategories: ${e.message}`);
+      console.warn("DB getCategories fallback in dev mode:", e);
     }
+  } else if (IS_PROD) {
+    throw new Error("DATABASE_URL is not configured in production environment.");
   }
 
   const store = getLocalStore();
-  return store.categories.sort((a, b) => a.order_index - b.order_index);
+  return store.categories.sort((a: any, b: any) => a.order_index - b.order_index);
 }
 
 export async function getLevels(): Promise<Level[]> {
@@ -131,13 +131,17 @@ export async function getLevels(): Promise<Level[]> {
     try {
       const res = await pool.query("SELECT * FROM public.levels ORDER BY order_index ASC");
       if (res.rows.length > 0) return res.rows as Level[];
-    } catch (e) {
-      console.warn("DB getLevels fallback:", e);
+      if (IS_PROD) throw new Error("No levels found in PostgreSQL database.");
+    } catch (e: any) {
+      if (IS_PROD) throw new Error(`Database error in getLevels: ${e.message}`);
+      console.warn("DB getLevels fallback in dev mode:", e);
     }
+  } else if (IS_PROD) {
+    throw new Error("DATABASE_URL is not configured in production environment.");
   }
 
   const store = getLocalStore();
-  return store.levels.sort((a, b) => a.order_index - b.order_index);
+  return store.levels.sort((a: any, b: any) => a.order_index - b.order_index);
 }
 
 export async function getCourses(options?: {
@@ -160,15 +164,16 @@ export async function getCourses(options?: {
       }
       sql += " ORDER BY order_index ASC";
       const res = await pool.query(sql, params);
-      if (res.rows.length > 0) {
-        coursesList = res.rows as Course[];
-      }
-    } catch (e) {
-      console.warn("DB getCourses fallback:", e);
+      coursesList = res.rows as Course[];
+    } catch (e: any) {
+      if (IS_PROD) throw new Error(`Database error in getCourses: ${e.message}`);
+      console.warn("DB getCourses fallback in dev mode:", e);
     }
+  } else if (IS_PROD) {
+    throw new Error("DATABASE_URL is not configured in production environment.");
   }
 
-  if (coursesList.length === 0) {
+  if (coursesList.length === 0 && !IS_PROD) {
     const store = getLocalStore();
     coursesList = store.courses;
   }
@@ -185,10 +190,12 @@ export async function getCourses(options?: {
       lRes.rows.forEach((r) => {
         lessonCounts[r.course_id] = parseInt(r.count, 10);
       });
-    } catch {}
-  } else {
+    } catch (e: any) {
+      if (IS_PROD) throw new Error(`Database error counting lessons: ${e.message}`);
+    }
+  } else if (!IS_PROD) {
     const store = getLocalStore();
-    store.lessons.forEach((l) => {
+    store.lessons.forEach((l: any) => {
       if (!options?.publishedOnly || l.is_published) {
         lessonCounts[l.course_id] = (lessonCounts[l.course_id] || 0) + 1;
       }
@@ -259,17 +266,20 @@ export async function getCourseLessons(
       sql += " ORDER BY order_index ASC";
       const res = await pool.query(sql, params);
       return res.rows as Lesson[];
-    } catch (e) {
-      console.warn("DB getCourseLessons fallback:", e);
+    } catch (e: any) {
+      if (IS_PROD) throw new Error(`Database error in getCourseLessons: ${e.message}`);
+      console.warn("DB getCourseLessons fallback in dev mode:", e);
     }
+  } else if (IS_PROD) {
+    throw new Error("DATABASE_URL is not configured in production environment.");
   }
 
   const store = getLocalStore();
-  let lessons = store.lessons.filter((l) => l.course_id === courseId);
+  let lessons = store.lessons.filter((l: any) => l.course_id === courseId);
   if (options?.publishedOnly) {
-    lessons = lessons.filter((l) => l.is_published);
+    lessons = lessons.filter((l: any) => l.is_published);
   }
-  return lessons.sort((a, b) => a.order_index - b.order_index);
+  return lessons.sort((a: any, b: any) => a.order_index - b.order_index);
 }
 
 export async function getLessonBySlug(
@@ -288,7 +298,7 @@ export async function getLessonBySlug(
 }
 
 // ----------------------------------------------------------------------
-// Course CRUD (Admin)
+// Course CRUD (Strictly PostgreSQL in Production)
 // ----------------------------------------------------------------------
 
 export async function createCourse(
@@ -296,42 +306,43 @@ export async function createCourse(
 ): Promise<Course> {
   const pool = getDbPool();
   if (pool) {
-    try {
-      const res = await pool.query(
-        `INSERT INTO public.courses (
-          title, slug, short_description, description, thumbnail_url,
-          level_id, category_id, instructor_name, is_published, is_featured,
-          is_free, price, duration_hours, objectives, order_index
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-        RETURNING *`,
-        [
-          input.title,
-          input.slug,
-          input.short_description,
-          input.description,
-          input.thumbnail_url,
-          input.level_id,
-          input.category_id,
-          input.instructor_name || "حسين علي",
-          input.is_published,
-          input.is_featured,
-          input.is_free,
-          input.price || 0,
-          input.duration_hours || 0,
-          JSON.stringify(input.objectives || []),
-          input.order_index || 99,
-        ]
-      );
-      if (res.rows.length > 0) return res.rows[0] as Course;
-    } catch (e) {
-      console.warn("DB createCourse fallback:", e);
-    }
+    const res = await pool.query(
+      `INSERT INTO public.courses (
+        title, slug, short_description, description, thumbnail_url,
+        level_id, category_id, instructor_name, is_published, is_featured,
+        is_free, price, duration_hours, objectives, order_index
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+      RETURNING *`,
+      [
+        input.title,
+        input.slug,
+        input.short_description,
+        input.description,
+        input.thumbnail_url,
+        input.level_id,
+        input.category_id,
+        input.instructor_name || "حسين علي",
+        input.is_published,
+        input.is_featured,
+        input.is_free,
+        input.price || 0,
+        input.duration_hours || 0,
+        JSON.stringify(input.objectives || []),
+        input.order_index || 99,
+      ]
+    );
+    if (res.rows.length > 0) return res.rows[0] as Course;
+    throw new Error("Failed to create course in PostgreSQL database.");
+  }
+
+  if (IS_PROD) {
+    throw new Error("DATABASE_URL is required in production.");
   }
 
   const store = getLocalStore();
   const newCourse: Course = {
     ...input,
-    id: `course_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    id: `course_${Date.now()}`,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
@@ -343,24 +354,25 @@ export async function createCourse(
 export async function updateCourse(id: string, updates: Partial<Course>): Promise<Course | null> {
   const pool = getDbPool();
   if (pool) {
-    try {
-      const fields = Object.keys(updates).filter((k) => k !== "id" && k !== "level" && k !== "category" && k !== "lessons_count");
-      const values = fields.map((k) => {
-        const val = (updates as any)[k];
-        return typeof val === "object" && val !== null ? JSON.stringify(val) : val;
-      });
+    const fields = Object.keys(updates).filter((k) => k !== "id" && k !== "level" && k !== "category" && k !== "lessons_count");
+    const values = fields.map((k) => {
+      const val = (updates as any)[k];
+      return typeof val === "object" && val !== null ? JSON.stringify(val) : val;
+    });
 
-      const setClause = fields.map((f, i) => `${f} = $${i + 1}`).join(", ");
-      const query = `UPDATE public.courses SET ${setClause}, updated_at = NOW() WHERE id = $${fields.length + 1} RETURNING *`;
-      const res = await pool.query(query, [...values, id]);
-      if (res.rows.length > 0) return res.rows[0] as Course;
-    } catch (e) {
-      console.warn("DB updateCourse fallback:", e);
-    }
+    const setClause = fields.map((f, i) => `${f} = $${i + 1}`).join(", ");
+    const query = `UPDATE public.courses SET ${setClause}, updated_at = NOW() WHERE id = $${fields.length + 1} RETURNING *`;
+    const res = await pool.query(query, [...values, id]);
+    if (res.rows.length > 0) return res.rows[0] as Course;
+    return null;
+  }
+
+  if (IS_PROD) {
+    throw new Error("DATABASE_URL is required in production.");
   }
 
   const store = getLocalStore();
-  const idx = store.courses.findIndex((c) => c.id === id);
+  const idx = store.courses.findIndex((c: any) => c.id === id);
   if (idx === -1) return null;
   store.courses[idx] = { ...store.courses[idx], ...updates, updated_at: new Date().toISOString() };
   saveLocalStore(store);
@@ -370,22 +382,23 @@ export async function updateCourse(id: string, updates: Partial<Course>): Promis
 export async function deleteCourse(id: string): Promise<boolean> {
   const pool = getDbPool();
   if (pool) {
-    try {
-      await pool.query("DELETE FROM public.courses WHERE id = $1", [id]);
-    } catch (e) {
-      console.warn("DB deleteCourse fallback:", e);
-    }
+    await pool.query("DELETE FROM public.courses WHERE id = $1", [id]);
+    return true;
+  }
+
+  if (IS_PROD) {
+    throw new Error("DATABASE_URL is required in production.");
   }
 
   const store = getLocalStore();
-  store.courses = store.courses.filter((c) => c.id !== id);
-  store.lessons = store.lessons.filter((l) => l.course_id !== id);
+  store.courses = store.courses.filter((c: any) => c.id !== id);
+  store.lessons = store.lessons.filter((l: any) => l.course_id !== id);
   saveLocalStore(store);
   return true;
 }
 
 // ----------------------------------------------------------------------
-// Lesson CRUD (Admin)
+// Lesson CRUD (Strictly PostgreSQL in Production)
 // ----------------------------------------------------------------------
 
 export async function createLesson(
@@ -393,37 +406,38 @@ export async function createLesson(
 ): Promise<Lesson> {
   const pool = getDbPool();
   if (pool) {
-    try {
-      const res = await pool.query(
-        `INSERT INTO public.lessons (
-          course_id, title, slug, description, video_url, video_provider,
-          duration_minutes, content_notes, resources, is_published, order_index
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-        RETURNING *`,
-        [
-          input.course_id,
-          input.title,
-          input.slug,
-          input.description || "",
-          input.video_url,
-          input.video_provider || "youtube",
-          input.duration_minutes || 0,
-          input.content_notes || "",
-          JSON.stringify(input.resources || []),
-          input.is_published,
-          input.order_index || 99,
-        ]
-      );
-      if (res.rows.length > 0) return res.rows[0] as Lesson;
-    } catch (e) {
-      console.warn("DB createLesson fallback:", e);
-    }
+    const res = await pool.query(
+      `INSERT INTO public.lessons (
+        course_id, title, slug, description, video_url, video_provider,
+        duration_minutes, content_notes, resources, is_published, order_index
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      RETURNING *`,
+      [
+        input.course_id,
+        input.title,
+        input.slug,
+        input.description || "",
+        input.video_url,
+        input.video_provider || "youtube",
+        input.duration_minutes || 0,
+        input.content_notes || "",
+        JSON.stringify(input.resources || []),
+        input.is_published,
+        input.order_index || 99,
+      ]
+    );
+    if (res.rows.length > 0) return res.rows[0] as Lesson;
+    throw new Error("Failed to create lesson in PostgreSQL database.");
+  }
+
+  if (IS_PROD) {
+    throw new Error("DATABASE_URL is required in production.");
   }
 
   const store = getLocalStore();
   const newLesson: Lesson = {
     ...input,
-    id: `lesson_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    id: `lesson_${Date.now()}`,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
@@ -435,24 +449,25 @@ export async function createLesson(
 export async function updateLesson(id: string, updates: Partial<Lesson>): Promise<Lesson | null> {
   const pool = getDbPool();
   if (pool) {
-    try {
-      const fields = Object.keys(updates).filter((k) => k !== "id");
-      const values = fields.map((k) => {
-        const val = (updates as any)[k];
-        return typeof val === "object" && val !== null ? JSON.stringify(val) : val;
-      });
+    const fields = Object.keys(updates).filter((k) => k !== "id");
+    const values = fields.map((k) => {
+      const val = (updates as any)[k];
+      return typeof val === "object" && val !== null ? JSON.stringify(val) : val;
+    });
 
-      const setClause = fields.map((f, i) => `${f} = $${i + 1}`).join(", ");
-      const query = `UPDATE public.lessons SET ${setClause}, updated_at = NOW() WHERE id = $${fields.length + 1} RETURNING *`;
-      const res = await pool.query(query, [...values, id]);
-      if (res.rows.length > 0) return res.rows[0] as Lesson;
-    } catch (e) {
-      console.warn("DB updateLesson fallback:", e);
-    }
+    const setClause = fields.map((f, i) => `${f} = $${i + 1}`).join(", ");
+    const query = `UPDATE public.lessons SET ${setClause}, updated_at = NOW() WHERE id = $${fields.length + 1} RETURNING *`;
+    const res = await pool.query(query, [...values, id]);
+    if (res.rows.length > 0) return res.rows[0] as Lesson;
+    return null;
+  }
+
+  if (IS_PROD) {
+    throw new Error("DATABASE_URL is required in production.");
   }
 
   const store = getLocalStore();
-  const idx = store.lessons.findIndex((l) => l.id === id);
+  const idx = store.lessons.findIndex((l: any) => l.id === id);
   if (idx === -1) return null;
   store.lessons[idx] = { ...store.lessons[idx], ...updates, updated_at: new Date().toISOString() };
   saveLocalStore(store);
@@ -462,15 +477,16 @@ export async function updateLesson(id: string, updates: Partial<Lesson>): Promis
 export async function deleteLesson(id: string): Promise<boolean> {
   const pool = getDbPool();
   if (pool) {
-    try {
-      await pool.query("DELETE FROM public.lessons WHERE id = $1", [id]);
-    } catch (e) {
-      console.warn("DB deleteLesson fallback:", e);
-    }
+    await pool.query("DELETE FROM public.lessons WHERE id = $1", [id]);
+    return true;
+  }
+
+  if (IS_PROD) {
+    throw new Error("DATABASE_URL is required in production.");
   }
 
   const store = getLocalStore();
-  store.lessons = store.lessons.filter((l) => l.id !== id);
+  store.lessons = store.lessons.filter((l: any) => l.id !== id);
   saveLocalStore(store);
   return true;
 }
@@ -478,21 +494,24 @@ export async function deleteLesson(id: string): Promise<boolean> {
 export async function reorderLessons(courseId: string, orderedLessonIds: string[]): Promise<boolean> {
   const pool = getDbPool();
   if (pool) {
-    try {
-      for (let i = 0; i < orderedLessonIds.length; i++) {
-        await pool.query("UPDATE public.lessons SET order_index = $1 WHERE id = $2", [i + 1, orderedLessonIds[i]]);
-      }
-    } catch (e) {
-      console.warn("DB reorderLessons fallback:", e);
+    for (let i = 0; i < orderedLessonIds.length; i++) {
+      await pool.query("UPDATE public.lessons SET order_index = $1, updated_at = NOW() WHERE id = $2 AND course_id = $3", [
+        i + 1,
+        orderedLessonIds[i],
+        courseId,
+      ]);
     }
+    return true;
+  }
+
+  if (IS_PROD) {
+    throw new Error("DATABASE_URL is required in production.");
   }
 
   const store = getLocalStore();
   orderedLessonIds.forEach((id, index) => {
-    const l = store.lessons.find((item) => item.id === id && item.course_id === courseId);
-    if (l) {
-      l.order_index = index + 1;
-    }
+    const l = store.lessons.find((item: any) => item.id === id && item.course_id === courseId);
+    if (l) l.order_index = index + 1;
   });
   saveLocalStore(store);
   return true;
@@ -510,15 +529,15 @@ export async function createCategory(input: {
 }): Promise<Category> {
   const pool = getDbPool();
   if (pool) {
-    try {
-      const res = await pool.query(
-        "INSERT INTO public.categories (name_ar, name_en, slug, description) VALUES ($1, $2, $3, $4) RETURNING *",
-        [input.name_ar, input.name_en, input.slug, input.description || ""]
-      );
-      if (res.rows.length > 0) return res.rows[0] as Category;
-    } catch {}
+    const res = await pool.query(
+      "INSERT INTO public.categories (name_ar, name_en, slug, description) VALUES ($1, $2, $3, $4) RETURNING *",
+      [input.name_ar, input.name_en, input.slug, input.description || ""]
+    );
+    if (res.rows.length > 0) return res.rows[0] as Category;
+    throw new Error("Failed to create category in database.");
   }
 
+  if (IS_PROD) throw new Error("DATABASE_URL is required in production.");
   const store = getLocalStore();
   const newCat: Category = {
     id: `cat_${Date.now()}`,
@@ -542,15 +561,15 @@ export async function createLevel(input: {
 }): Promise<Level> {
   const pool = getDbPool();
   if (pool) {
-    try {
-      const res = await pool.query(
-        "INSERT INTO public.levels (name_ar, name_en, slug, description) VALUES ($1, $2, $3, $4) RETURNING *",
-        [input.name_ar, input.name_en, input.slug, input.description || ""]
-      );
-      if (res.rows.length > 0) return res.rows[0] as Level;
-    } catch {}
+    const res = await pool.query(
+      "INSERT INTO public.levels (name_ar, name_en, slug, description) VALUES ($1, $2, $3, $4) RETURNING *",
+      [input.name_ar, input.name_en, input.slug, input.description || ""]
+    );
+    if (res.rows.length > 0) return res.rows[0] as Level;
+    throw new Error("Failed to create level in database.");
   }
 
+  if (IS_PROD) throw new Error("DATABASE_URL is required in production.");
   const store = getLocalStore();
   const newLevel: Level = {
     id: `level_${Date.now()}`,
@@ -571,31 +590,42 @@ export async function createLevel(input: {
 // ----------------------------------------------------------------------
 
 export async function getAdminStats() {
-  const courses = await getCourses();
-  const publishedCourses = courses.filter((c) => c.is_published).length;
-  const draftCourses = courses.length - publishedCourses;
-  const categories = await getCategories();
-  const levels = await getLevels();
-
-  let totalLessons = 0;
   const pool = getDbPool();
   if (pool) {
-    try {
-      const res = await pool.query("SELECT COUNT(*) FROM public.lessons");
-      totalLessons = parseInt(res.rows[0].count, 10);
-    } catch {
-      totalLessons = getLocalStore().lessons.length;
-    }
-  } else {
-    totalLessons = getLocalStore().lessons.length;
+    const [cRes, lRes, catRes, lvlRes] = await Promise.all([
+      pool.query("SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE is_published = true) as published FROM public.courses"),
+      pool.query("SELECT COUNT(*) as total FROM public.lessons"),
+      pool.query("SELECT COUNT(*) as total FROM public.categories"),
+      pool.query("SELECT COUNT(*) as total FROM public.levels"),
+    ]);
+
+    const totalCourses = parseInt(cRes.rows[0].total, 10) || 0;
+    const publishedCourses = parseInt(cRes.rows[0].published, 10) || 0;
+    const draftCourses = totalCourses - publishedCourses;
+    const totalLessons = parseInt(lRes.rows[0].total, 10) || 0;
+    const totalCategories = parseInt(catRes.rows[0].total, 10) || 0;
+    const totalLevels = parseInt(lvlRes.rows[0].total, 10) || 0;
+
+    return {
+      totalCourses,
+      publishedCourses,
+      draftCourses,
+      totalLessons,
+      totalCategories,
+      totalLevels,
+    };
   }
 
+  if (IS_PROD) throw new Error("DATABASE_URL is required in production.");
+  const store = getLocalStore();
+  const totalCourses = store.courses.length;
+  const publishedCourses = store.courses.filter((c: any) => c.is_published).length;
   return {
-    totalCourses: courses.length,
+    totalCourses,
     publishedCourses,
-    draftCourses,
-    totalLessons,
-    totalCategories: categories.length,
-    totalLevels: levels.length,
+    draftCourses: totalCourses - publishedCourses,
+    totalLessons: store.lessons.length,
+    totalCategories: store.categories.length,
+    totalLevels: store.levels.length,
   };
 }

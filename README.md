@@ -107,13 +107,10 @@
 
 ---
 
-## 🔐 بيانات دخول لوحة التحكم (Admin Portal)
+## 🔐 الوصول للوحة تحكم المدرس (Admin Portal)
 
-- **الرابط**: [https://hussein-ali-english.onrender.com/admin/login](https://hussein-ali-english.onrender.com/admin/login)
-- **البريد الافتراضي**: `admin@husseinali.com`
-- **كلمة المرور الافتراضية**: `HusseinAli2026!`
-
-*(يمكن تخصيصها عبر ملف `.env` أو متغيرات استضافة Render عبر `ADMIN_EMAIL` و `ADMIN_PASSWORD`)*.
+- **رابط بوابة الإدارة**: [https://hussein-ali-english.onrender.com/admin/login](https://hussein-ali-english.onrender.com/admin/login)
+- **إعداد بيانات الدخول**: يتم ضبط البريد الإلكتروني وكلمة المرور المشفرة للمدير بشكل آمن وحصري عبر متغيرات البيئة (`ADMIN_EMAIL` و `ADMIN_PASSWORD`) في استضافة Render أو ملف البيئة المحلي، ولا توجد أي كلمات مرور ثابتة أو مكشوفة في الكود المصدري.
 
 ---
 

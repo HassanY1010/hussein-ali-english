@@ -56,9 +56,9 @@ export default function AdminLoginPage() {
                 <input
                   type="email"
                   name="email"
-                  defaultValue="admin@husseinali.com"
                   required
-                  placeholder="admin@husseinali.com"
+                  autoComplete="email"
+                  placeholder="admin@example.com"
                   className="w-full bg-paper-50 border border-paper-border rounded-sm pr-9 pl-3 py-2.5 text-xs sm:text-sm text-ink focus:bg-white focus:border-accent transition-colors ltr-text"
                 />
                 <Mail className="w-4 h-4 text-ink-muted absolute right-3 top-1/2 -translate-y-1/2" />
@@ -73,8 +73,8 @@ export default function AdminLoginPage() {
                 <input
                   type="password"
                   name="password"
-                  defaultValue="HusseinAli2026!"
                   required
+                  autoComplete="current-password"
                   placeholder="••••••••••••"
                   className="w-full bg-paper-50 border border-paper-border rounded-sm pr-9 pl-3 py-2.5 text-xs sm:text-sm text-ink focus:bg-white focus:border-accent transition-colors ltr-text"
                 />
@@ -86,16 +86,6 @@ export default function AdminLoginPage() {
               <SubmitButton />
             </div>
           </form>
-
-          {/* Credentials hint for administrator */}
-          <div className="mt-6 pt-4 border-t border-paper-border text-[11px] text-ink-muted leading-relaxed bg-paper-50 p-3 rounded-sm">
-            <span className="font-bold text-ink block mb-0.5">بيانات الدخول الافتراضية للمدرس:</span>
-            <span className="block font-latin">Email: admin@husseinali.com</span>
-            <span className="block font-latin">Password: HusseinAli2026!</span>
-            <span className="block text-[10px] text-ink-muted mt-1">
-              (يمكن تخصيصها عبر متغيرات البيئة ADMIN_EMAIL و ADMIN_PASSWORD أو Supabase Auth)
-            </span>
-          </div>
         </div>
 
         {/* Back to site */}

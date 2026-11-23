@@ -24,8 +24,8 @@ services:
       - key: NEXT_PUBLIC_STORAGE_BUCKET
         value: uploads
       - key: ADMIN_EMAIL
-        value: admin@husseinali.com
+        sync: false
       - key: ADMIN_PASSWORD
-        value: HusseinAli2026!
+        sync: false
       - key: ADMIN_SESSION_SECRET
         generateValue: true

@@ -6,42 +6,49 @@ import {
   destroyAdminSession,
   verifyAdminCredentials,
 } from "@/lib/auth/session";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { checkRateLimit, recordFailedAttempt, resetRateLimit } from "@/lib/auth/rate-limit";
+import { headers } from "next/headers";
 
 export async function loginAdminAction(prevState: any, formData: FormData) {
   const email = (formData.get("email") as string) || "";
   const password = (formData.get("password") as string) || "";
 
+  // Get client identifier (IP or forwarded IP)
+  const headerList = headers();
+  const forwardedFor = headerList.get("x-forwarded-for");
+  const clientIp = forwardedFor ? forwardedFor.split(",")[0].trim() : "client_ip";
+  const rateLimitKey = `${clientIp}_${email.trim().toLowerCase()}`;
+
+  // 1. Check Rate Limit / Brute Force
+  const rateLimit = checkRateLimit(rateLimitKey);
+  if (!rateLimit.allowed) {
+    const minutes = Math.ceil((rateLimit.retryAfterSeconds || 60) / 60);
+    return {
+      error: `تم قفل محاولات الدخول مؤقتاً لحماية الحساب بعد تكرار إدخال كلمة مرور خاطئة. يرجى المحاولة بعد ${minutes} دقيقة.`,
+    };
+  }
+
   if (!email || !password) {
     return { error: "يرجى إدخال البريد الإلكتروني وكلمة المرور." };
   }
 
-  // 1. Try Supabase Auth if credentials match or are configured
-  const supabase = await createServerSupabaseClient();
-  if (supabase) {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
+  // 2. Verify Credentials
+  const isValid = verifyAdminCredentials(email, password);
 
-      if (!error && data.user) {
-        await createAdminSession(data.user.email || email, data.user.user_metadata?.full_name || "حسين علي");
-        redirect("/admin");
-      }
-    } catch (err: any) {
-      if (err?.message?.includes("NEXT_REDIRECT")) throw err;
-      // If Supabase auth failed, attempt fallback check below
+  if (!isValid) {
+    const attemptResult = recordFailedAttempt(rateLimitKey);
+    if (attemptResult.blocked) {
+      return {
+        error: "تم استنفاد الحد الأقصى للمحاولات (5 محاولات). تم تجميد تسجيل الدخول مؤقتاً لمدة 15 دقيقة لدواعي الأمان.",
+      };
     }
+    return { error: "بيانات الدخول غير صحيحة. يرجى التحقق من البريد وكلمة المرور." };
   }
 
-  // 2. Direct verify against admin credentials
-  if (verifyAdminCredentials(email, password)) {
-    await createAdminSession(email.trim(), "حسين علي");
-    redirect("/admin");
-  }
-
-  return { error: "البريد الإلكتروني أو كلمة المرور غير صحيحة." };
+  // 3. Success: Reset rate limiter and create signed session
+  resetRateLimit(rateLimitKey);
+  await createAdminSession(email.trim(), "حسين علي");
+  redirect("/admin");
 }
 
 export async function logoutAdminAction() {
