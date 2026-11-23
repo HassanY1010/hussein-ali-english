@@ -2,8 +2,9 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Category, Level } from "@/types/database";
-import { Search, Filter, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { useState, useTransition } from "react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface FilterBarProps {
   categories: Category[];
@@ -23,6 +24,7 @@ export default function CoursesFilterBar({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const { t, language } = useLanguage();
 
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
@@ -70,16 +72,16 @@ export default function CoursesFilterBar({
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="ابحث عن كورس، درس، أو موضوع لغوي (مثال: أزمنة، محادثة، نطق)..."
-          className="w-full bg-paper-50 border border-paper-border rounded-sm pr-10 pl-24 py-3 text-sm text-ink placeholder:text-ink-muted focus:bg-white focus:border-accent transition-colors"
+          placeholder={t.courses.searchPlaceholder}
+          className="w-full bg-paper-50 border border-paper-border rounded-sm pr-10 pl-24 py-2.5 sm:py-3 text-xs sm:text-sm text-ink placeholder:text-ink-muted focus:bg-white focus:border-accent transition-colors"
         />
-        <Search className="w-4 h-4 text-ink-muted absolute right-3.5 top-1/2 -translate-y-1/2" />
+        <Search className="w-4 h-4 text-ink-muted absolute right-3.5 top-1/2 -translate-y-1/2" aria-hidden="true" />
         <button
           type="submit"
           disabled={isPending}
           className="absolute left-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-ink text-paper-50 text-xs font-semibold rounded-sm hover:bg-accent transition-colors disabled:opacity-50"
         >
-          {isPending ? "جاري البحث..." : "بحث"}
+          {isPending ? "..." : (language === "en" ? "Search" : "بحث")}
         </button>
       </form>
 
@@ -87,20 +89,22 @@ export default function CoursesFilterBar({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 pt-2 border-t border-paper-border">
         {/* Category selector */}
         <div className="lg:col-span-6 flex flex-col gap-1.5">
-          <label className="text-xs font-bold text-ink-soft">تصنيف الكورس:</label>
+          <label className="text-xs font-bold text-ink-soft">
+            {language === "en" ? "Category:" : "تصنيف الكورس:"}
+          </label>
           <div className="flex flex-wrap gap-1.5">
             <button
               onClick={() => {
                 setSelectedCategory("all");
                 applyFilters("all", undefined, undefined);
               }}
-              className={`px-3 py-1 text-xs rounded-sm transition-colors border ${
+              className={`px-2.5 py-1 text-xs rounded-sm transition-colors border ${
                 selectedCategory === "all"
                   ? "bg-ink text-paper-50 border-ink font-semibold"
                   : "bg-paper-50 text-ink-soft border-paper-border hover:bg-paper-100"
               }`}
             >
-              الكل
+              {t.courses.allCategories}
             </button>
             {categories.map((cat) => (
               <button
@@ -109,13 +113,13 @@ export default function CoursesFilterBar({
                   setSelectedCategory(cat.slug);
                   applyFilters(cat.slug, undefined, undefined);
                 }}
-                className={`px-3 py-1 text-xs rounded-sm transition-colors border ${
+                className={`px-2.5 py-1 text-xs rounded-sm transition-colors border ${
                   selectedCategory === cat.slug
                     ? "bg-accent text-paper-50 border-accent font-semibold"
                     : "bg-paper-50 text-ink-soft border-paper-border hover:bg-paper-100"
                 }`}
               >
-                {cat.name_ar}
+                {language === "en" ? cat.name_en : cat.name_ar}
               </button>
             ))}
           </div>
@@ -123,20 +127,22 @@ export default function CoursesFilterBar({
 
         {/* Level selector */}
         <div className="lg:col-span-6 flex flex-col gap-1.5">
-          <label className="text-xs font-bold text-ink-soft">المستوى اللغوي:</label>
+          <label className="text-xs font-bold text-ink-soft">
+            {language === "en" ? "Level:" : "المستوى اللغوي:"}
+          </label>
           <div className="flex flex-wrap gap-1.5">
             <button
               onClick={() => {
                 setSelectedLevel("all");
                 applyFilters(undefined, "all", undefined);
               }}
-              className={`px-3 py-1 text-xs rounded-sm transition-colors border ${
+              className={`px-2.5 py-1 text-xs rounded-sm transition-colors border ${
                 selectedLevel === "all"
                   ? "bg-ink text-paper-50 border-ink font-semibold"
                   : "bg-paper-50 text-ink-soft border-paper-border hover:bg-paper-100"
               }`}
             >
-              كافة المستويات
+              {t.courses.allLevels}
             </button>
             {levels.map((lvl) => (
               <button
@@ -145,13 +151,13 @@ export default function CoursesFilterBar({
                   setSelectedLevel(lvl.slug);
                   applyFilters(undefined, lvl.slug, undefined);
                 }}
-                className={`px-3 py-1 text-xs rounded-sm transition-colors border ${
+                className={`px-2.5 py-1 text-xs rounded-sm transition-colors border ${
                   selectedLevel === lvl.slug
                     ? "bg-ink text-paper-50 border-ink font-semibold"
                     : "bg-paper-50 text-ink-soft border-paper-border hover:bg-paper-100"
                 }`}
               >
-                {lvl.name_ar}
+                {language === "en" ? lvl.name_en : lvl.name_ar}
               </button>
             ))}
           </div>
@@ -160,13 +166,13 @@ export default function CoursesFilterBar({
 
       {hasActiveFilters && (
         <div className="pt-2 flex items-center justify-between text-xs text-ink-muted border-t border-paper-border">
-          <span>يتم تطبيق التصفية المخصصة...</span>
+          <span>{language === "en" ? "Active filters applied" : "يتم تطبيق التصفية المخصصة..."}</span>
           <button
             onClick={clearAll}
             className="inline-flex items-center gap-1 text-accent hover:underline font-semibold"
           >
             <X className="w-3.5 h-3.5" />
-            <span>إعادة تعيين الفلاتر</span>
+            <span>{t.courses.resetFilters}</span>
           </button>
         </div>
       )}

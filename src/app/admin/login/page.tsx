@@ -2,28 +2,36 @@
 
 import { useFormState, useFormStatus } from "react-dom";
 import { loginAdminAction } from "@/lib/actions/auth";
-import { Shield, Lock, Mail, ArrowLeft, AlertCircle } from "lucide-react";
+import { Lock, Mail, ArrowLeft, ArrowRight, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
+  const { t, dir } = useLanguage();
   return (
     <button
       type="submit"
       disabled={pending}
-      className="w-full py-3 px-4 rounded-sm bg-ink text-paper-50 font-bold text-sm hover:bg-accent transition-colors disabled:opacity-60 shadow-fine flex items-center justify-center gap-2"
+      className="w-full py-3 px-4 rounded-sm bg-ink text-paper-50 font-bold text-xs sm:text-sm hover:bg-accent transition-colors disabled:opacity-60 shadow-fine flex items-center justify-center gap-2"
     >
-      {pending ? "جاري التحقق..." : "تسجيل الدخول إلى لوحة التحكم"}
-      <ArrowLeft className="w-4 h-4" />
+      {pending ? t.admin.login.submitting : t.admin.login.submitButton}
+      {dir === "rtl" ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
     </button>
   );
 }
 
 export default function AdminLoginPage() {
   const [state, formAction] = useFormState(loginAdminAction, null);
+  const { t, dir } = useLanguage();
 
   return (
-    <div className="min-h-screen bg-paper-100 flex flex-col justify-center items-center p-4">
+    <div className="min-h-screen bg-paper-100 flex flex-col justify-center items-center p-4 relative">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
+
       <div className="max-w-md w-full">
         {/* Monogram brand */}
         <div className="text-center mb-8">
@@ -31,10 +39,10 @@ export default function AdminLoginPage() {
             HA
           </div>
           <h1 className="text-2xl font-black text-ink">
-            لوحة تحكم الأستاذ حسين علي
+            {t.admin.login.title}
           </h1>
           <p className="text-xs text-ink-muted mt-1">
-            بوابة الإدارة الخاصة بمنصة تعليم اللغة الإنجليزية
+            {t.admin.login.subtitle}
           </p>
         </div>
 
@@ -50,7 +58,7 @@ export default function AdminLoginPage() {
           <form action={formAction} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-ink-soft mb-1.5">
-                البريد الإلكتروني للإدارة
+                {t.admin.login.emailLabel}
               </label>
               <div className="relative">
                 <input
@@ -58,7 +66,7 @@ export default function AdminLoginPage() {
                   name="email"
                   required
                   autoComplete="email"
-                  placeholder="admin@example.com"
+                  placeholder={t.admin.login.emailPlaceholder}
                   className="w-full bg-paper-50 border border-paper-border rounded-sm pr-9 pl-3 py-2.5 text-xs sm:text-sm text-ink focus:bg-white focus:border-accent transition-colors ltr-text"
                 />
                 <Mail className="w-4 h-4 text-ink-muted absolute right-3 top-1/2 -translate-y-1/2" />
@@ -67,7 +75,7 @@ export default function AdminLoginPage() {
 
             <div>
               <label className="block text-xs font-bold text-ink-soft mb-1.5">
-                كلمة المرور
+                {t.admin.login.passwordLabel}
               </label>
               <div className="relative">
                 <input
@@ -75,7 +83,7 @@ export default function AdminLoginPage() {
                   name="password"
                   required
                   autoComplete="current-password"
-                  placeholder="••••••••••••"
+                  placeholder={t.admin.login.passwordPlaceholder}
                   className="w-full bg-paper-50 border border-paper-border rounded-sm pr-9 pl-3 py-2.5 text-xs sm:text-sm text-ink focus:bg-white focus:border-accent transition-colors ltr-text"
                 />
                 <Lock className="w-4 h-4 text-ink-muted absolute right-3 top-1/2 -translate-y-1/2" />
@@ -94,8 +102,8 @@ export default function AdminLoginPage() {
             href="/"
             className="text-xs text-ink-muted hover:text-ink font-semibold inline-flex items-center gap-1 transition-colors"
           >
-            <span>العودة للموقع الرئيسي (hussein-ali-english.onrender.com)</span>
-            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>{t.admin.login.backToSite}</span>
+            {dir === "rtl" ? <ArrowLeft className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}
           </Link>
         </div>
       </div>

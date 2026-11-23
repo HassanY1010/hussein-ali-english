@@ -32,13 +32,19 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["Cairo", "system-ui", "-apple-system", "sans-serif"],
-        editorial: ["'Playfair Display'", "Georgia", "serif"],
+        sans: ["Almarai", "'Plus Jakarta Sans'", "system-ui", "-apple-system", "sans-serif"],
+        heading: ["Tajawal", "Almarai", "sans-serif"],
+        tajawal: ["Tajawal", "sans-serif"],
+        almarai: ["Almarai", "sans-serif"],
+        editorial: ["Tajawal", "'Playfair Display'", "Georgia", "serif"],
         latin: ["'Plus Jakarta Sans'", "system-ui", "sans-serif"],
       },
       boxShadow: {
         fine: "0 1px 3px rgba(19, 33, 29, 0.05), 0 1px 2px rgba(19, 33, 29, 0.03)",
         lifted: "0 6px 18px rgba(19, 33, 29, 0.06), 0 1px 3px rgba(19, 33, 29, 0.04)",
+      },
+      screens: {
+        xs: "375px",
       },
     },
   },

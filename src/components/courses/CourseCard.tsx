@@ -1,6 +1,10 @@
+"use client";
+
+import React from "react";
 import Link from "next/link";
 import { Course } from "@/types/database";
-import { Clock, PlayCircle, BookOpen, ArrowLeft } from "lucide-react";
+import { Clock, PlayCircle, BookOpen, ArrowLeft, ArrowRight } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface CourseCardProps {
   course: Course;
@@ -8,10 +12,12 @@ interface CourseCardProps {
 }
 
 export default function CourseCard({ course, featured = false }: CourseCardProps) {
+  const { t, language, dir } = useLanguage();
+
   return (
     <article
       className={`group bg-white border border-paper-border hover:border-accent/60 rounded-sm overflow-hidden transition-all duration-300 flex flex-col justify-between ${
-        featured ? "md:grid md:grid-cols-12 gap-8 p-6 md:p-8" : "p-5"
+        featured ? "md:grid md:grid-cols-12 gap-6 lg:gap-8 p-5 sm:p-6 md:p-8" : "p-4 sm:p-5"
       }`}
     >
       {/* Thumbnail */}
@@ -36,7 +42,7 @@ export default function CourseCard({ course, featured = false }: CourseCardProps
         <div className="absolute top-3 right-3 flex items-center gap-2">
           {course.is_free && (
             <span className="px-2.5 py-0.5 text-xs font-semibold bg-ink text-paper-50 rounded-sm shadow-fine">
-              محتوى متاح مجاناً
+              {t.courses.free}
             </span>
           )}
         </div>
@@ -49,12 +55,12 @@ export default function CourseCard({ course, featured = false }: CourseCardProps
           <div className="flex flex-wrap items-center gap-2 mb-3 text-xs">
             {course.level && (
               <span className="px-2 py-0.5 rounded-sm bg-paper-100 text-ink-soft border border-paper-border font-medium">
-                {course.level.name_ar}
+                {language === "en" ? course.level.name_en : course.level.name_ar}
               </span>
             )}
             {course.category && (
               <span className="px-2 py-0.5 rounded-sm bg-accent-light text-accent border border-accent-border font-medium">
-                {course.category.name_ar}
+                {language === "en" ? course.category.name_en : course.category.name_ar}
               </span>
             )}
           </div>
@@ -69,7 +75,7 @@ export default function CourseCard({ course, featured = false }: CourseCardProps
           </h3>
 
           {/* Short Description */}
-          <p className="text-sm text-ink-muted leading-relaxed line-clamp-2 mb-4">
+          <p className="text-xs sm:text-sm text-ink-muted leading-relaxed line-clamp-2 mb-4">
             {course.short_description}
           </p>
 
@@ -88,17 +94,17 @@ export default function CourseCard({ course, featured = false }: CourseCardProps
 
         {/* Footer info & CTA */}
         <div className="pt-4 border-t border-paper-border/70 flex items-center justify-between mt-auto">
-          <div className="flex items-center gap-4 text-xs text-ink-muted font-latin">
+          <div className="flex items-center gap-3 sm:gap-4 text-xs text-ink-muted font-latin">
             {course.lessons_count !== undefined && (
               <span className="flex items-center gap-1.5 font-medium">
                 <PlayCircle className="w-3.5 h-3.5 text-ink-soft" />
-                <span>{course.lessons_count} دروس</span>
+                <span>{course.lessons_count} {t.courses.lessons}</span>
               </span>
             )}
             {course.duration_hours > 0 && (
               <span className="flex items-center gap-1.5 font-medium">
                 <Clock className="w-3.5 h-3.5 text-ink-soft" />
-                <span>{course.duration_hours} ساعات</span>
+                <span>{course.duration_hours} {t.courses.hours}</span>
               </span>
             )}
           </div>
@@ -107,8 +113,12 @@ export default function CourseCard({ course, featured = false }: CourseCardProps
             href={`/courses/${course.slug}`}
             className="inline-flex items-center gap-1 text-xs font-semibold text-ink group-hover:text-accent transition-colors"
           >
-            <span>عرض الكورس</span>
-            <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
+            <span>{t.courses.viewCourse}</span>
+            {dir === "rtl" ? (
+              <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
+            ) : (
+              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+            )}
           </Link>
         </div>
       </div>

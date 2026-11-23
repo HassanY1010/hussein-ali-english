@@ -10,37 +10,56 @@ import {
   Settings,
   ExternalLink,
   LogOut,
-  GraduationCap,
+  X,
 } from "lucide-react";
 import { logoutAdminAction } from "@/lib/actions/auth";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
-export default function AdminSidebar() {
+interface AdminSidebarProps {
+  onCloseMobile?: () => void;
+}
+
+export default function AdminSidebar({ onCloseMobile }: AdminSidebarProps) {
   const pathname = usePathname();
+  const { t, language } = useLanguage();
 
   const navItems = [
-    { label: "لوحة التحكم الرئيسية", href: "/admin", icon: LayoutDashboard },
-    { label: "إدارة الكورسات والدروس", href: "/admin/courses", icon: BookOpen },
-    { label: "إضافة كورس جديد", href: "/admin/courses/new", icon: PlusCircle },
-    { label: "التصنيفات والمستويات", href: "/admin/taxonomies", icon: Layers },
-    { label: "إعدادات المنصة والمدرس", href: "/admin/settings", icon: Settings },
+    { label: t.admin.dashboard, href: "/admin", icon: LayoutDashboard },
+    { label: t.admin.courses, href: "/admin/courses", icon: BookOpen },
+    { label: t.admin.newCourse, href: "/admin/courses/new", icon: PlusCircle },
+    { label: t.admin.taxonomies, href: "/admin/taxonomies", icon: Layers },
+    { label: t.admin.settings, href: "/admin/settings", icon: Settings },
   ];
 
   return (
-    <aside className="w-64 bg-ink text-paper-100 flex flex-col justify-between shrink-0 border-l border-ink-light">
+    <aside className="w-64 h-full min-h-screen bg-ink text-paper-100 flex flex-col justify-between shrink-0 border-l border-ink-light shadow-lifted md:shadow-none">
       <div>
-        {/* Brand */}
-        <div className="p-6 border-b border-ink-soft/30 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-sm bg-accent text-paper-50 flex items-center justify-center font-editorial text-lg font-bold">
-            HA
+        {/* Brand & Mobile Close */}
+        <div className="p-5 sm:p-6 border-b border-ink-soft/30 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-sm bg-accent text-paper-50 flex items-center justify-center font-editorial text-lg font-bold shrink-0">
+              HA
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-paper-50 leading-tight">
+                {t.admin.portalTitle}
+              </h2>
+              <span className="text-[11px] text-paper-300 font-latin">
+                Teacher Administration
+              </span>
+            </div>
           </div>
-          <div>
-            <h2 className="text-sm font-bold text-paper-50 leading-tight">
-              إدارة المنصة
-            </h2>
-            <span className="text-[11px] text-paper-300 font-latin">
-              Teacher Administration
-            </span>
-          </div>
+
+          {onCloseMobile && (
+            <button
+              type="button"
+              onClick={onCloseMobile}
+              className="md:hidden text-paper-300 hover:text-white p-1"
+              aria-label="Close Sidebar"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Navigation list */}
@@ -56,6 +75,7 @@ export default function AdminSidebar() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={onCloseMobile}
                 className={`flex items-center gap-3 px-3.5 py-2.5 rounded-sm text-xs font-semibold transition-colors ${
                   isActive
                     ? "bg-accent text-white"
@@ -80,7 +100,7 @@ export default function AdminSidebar() {
         >
           <span className="flex items-center gap-2">
             <ExternalLink className="w-3.5 h-3.5" />
-            <span>معاينة المنصة الحية</span>
+            <span>{language === "en" ? "Live Site" : "معاينة المنصة الحية"}</span>
           </span>
           <span className="text-[10px] text-accent font-latin">onrender.com</span>
         </a>
@@ -91,7 +111,7 @@ export default function AdminSidebar() {
             className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-950/30 rounded-sm transition-colors text-right"
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span>تسجيل الخروج</span>
+            <span>{t.admin.logout}</span>
           </button>
         </form>
       </div>

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Course, Lesson, SiteSettings } from "@/types/database";
 import VideoPlayer from "./VideoPlayer";
 import {
@@ -10,14 +9,15 @@ import {
   Circle,
   ArrowRight,
   ArrowLeft,
-  BookOpen,
   Send,
   FileText,
   Download,
   ListOrdered,
   ChevronRight,
+  ChevronLeft,
   Share2,
 } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface LessonViewerProps {
   course: Course;
@@ -32,7 +32,7 @@ export default function LessonViewer({
   allLessons,
   settings,
 }: LessonViewerProps) {
-  const router = useRouter();
+  const { t, language, dir } = useLanguage();
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
   const [copiedLink, setCopiedLink] = useState(false);
 
@@ -91,30 +91,30 @@ export default function LessonViewer({
       {/* Focused Academic Topbar */}
       <header className="bg-white border-b border-paper-border sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link
               href={`/courses/${course.slug}`}
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-soft hover:text-ink transition-colors p-1.5 rounded-sm hover:bg-paper-100"
             >
-              <ChevronRight className="w-4 h-4" />
-              <span>العودة لصفحة الكورس</span>
+              {dir === "rtl" ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+              <span>{t.classroom.backToCourse}</span>
             </Link>
             <span className="text-paper-darkborder">|</span>
-            <span className="text-xs text-ink-muted truncate max-w-[200px] sm:max-w-xs font-medium">
+            <span className="text-xs text-ink-muted truncate max-w-[140px] sm:max-w-xs font-medium">
               {course.title}
             </span>
           </div>
 
           {/* Progress Overview */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <div className="hidden sm:flex items-center gap-3 text-xs">
               <span className="text-ink-muted">
-                التقدم:{" "}
+                {language === "en" ? "Progress: " : "التقدم: "}
                 <strong className="text-ink font-latin font-bold">
                   {completedLessonIds.length} / {allLessons.length}
                 </strong>
               </span>
-              <div className="w-24 h-2 bg-paper-200 rounded-full overflow-hidden">
+              <div className="w-20 sm:w-24 h-2 bg-paper-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-accent transition-all duration-300"
                   style={{ width: `${progressPercentage}%` }}
@@ -126,10 +126,12 @@ export default function LessonViewer({
             <button
               onClick={copyCurrentLink}
               className="p-2 text-ink-muted hover:text-ink rounded-sm hover:bg-paper-100 transition-colors text-xs flex items-center gap-1"
-              title="نسخ رابط الدرس"
+              title="Share lesson"
             >
               <Share2 className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">{copiedLink ? "تم النسخ!" : "مشاركة"}</span>
+              <span className="hidden md:inline">
+                {copiedLink ? (language === "en" ? "Copied!" : "تم النسخ!") : (language === "en" ? "Share" : "مشاركة")}
+              </span>
             </button>
           </div>
         </div>
@@ -137,7 +139,7 @@ export default function LessonViewer({
 
       {/* Main Learning Canvas */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
           {/* Main Content Area (Video + Details + Notes) */}
           <div className="lg:col-span-8 space-y-6">
             {/* Video Player */}
@@ -148,10 +150,10 @@ export default function LessonViewer({
             />
 
             {/* Navigation & Completion Bar */}
-            <div className="bg-white border border-paper-border rounded-sm p-4 flex flex-wrap items-center justify-between gap-4 shadow-fine">
+            <div className="bg-white border border-paper-border rounded-sm p-4 flex flex-wrap items-center justify-between gap-3 shadow-fine">
               <button
                 onClick={toggleCompletion}
-                className={`inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold rounded-sm transition-all duration-200 border ${
+                className={`inline-flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-sm transition-all duration-200 border ${
                   isCompleted
                     ? "bg-[#1f5c3f]/10 text-[#1f5c3f] border-[#1f5c3f]/30"
                     : "bg-paper-50 hover:bg-paper-100 text-ink-soft border-paper-border"
@@ -160,12 +162,12 @@ export default function LessonViewer({
                 {isCompleted ? (
                   <>
                     <CheckCircle className="w-4 h-4 text-[#1f5c3f]" />
-                    <span>تم إكمال هذا الدرس (اضغط للإلغاء)</span>
+                    <span>{language === "en" ? "Completed (Click to undo)" : "تم إكمال هذا الدرس (اضغط للإلغاء)"}</span>
                   </>
                 ) : (
                   <>
                     <Circle className="w-4 h-4 text-ink-muted" />
-                    <span>تحديد الدرس كمكتمل</span>
+                    <span>{language === "en" ? "Mark as completed" : "تحديد الدرس كمكتمل"}</span>
                   </>
                 )}
               </button>
@@ -177,46 +179,46 @@ export default function LessonViewer({
                     href={`/courses/${course.slug}/${prevLesson.slug}`}
                     className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-sm bg-paper-100 hover:bg-paper-200 text-ink transition-colors"
                   >
-                    <ArrowRight className="w-3.5 h-3.5" />
-                    <span>الدرس السابق</span>
+                    {dir === "rtl" ? <ArrowRight className="w-3.5 h-3.5" /> : <ArrowLeft className="w-3.5 h-3.5" />}
+                    <span>{t.classroom.previousLesson}</span>
                   </Link>
                 ) : (
                   <button
                     disabled
                     className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-sm bg-paper-100 text-ink-muted/50 cursor-not-allowed"
                   >
-                    <span>الدرس السابق</span>
+                    <span>{t.classroom.previousLesson}</span>
                   </button>
                 )}
 
                 {nextLesson ? (
                   <Link
                     href={`/courses/${course.slug}/${nextLesson.slug}`}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-sm bg-ink hover:bg-accent text-paper-50 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-sm bg-ink hover:bg-accent text-paper-50 transition-colors"
                   >
-                    <span>الدرس التالي</span>
-                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>{t.classroom.nextLesson}</span>
+                    {dir === "rtl" ? <ArrowLeft className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}
                   </Link>
                 ) : (
                   <Link
                     href={`/courses/${course.slug}`}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-sm bg-accent hover:bg-accent-hover text-white transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-sm bg-accent hover:bg-accent-hover text-white transition-colors"
                   >
-                    <span>إتمام الكورس والعودة</span>
+                    <span>{language === "en" ? "Complete Course" : "إتمام الكورس والعودة"}</span>
                   </Link>
                 )}
               </div>
             </div>
 
             {/* Lesson Editorial Header */}
-            <div className="bg-white border border-paper-border rounded-sm p-6 sm:p-8 space-y-4 shadow-fine">
+            <div className="bg-white border border-paper-border rounded-sm p-5 sm:p-7 space-y-4 shadow-fine">
               <div className="flex items-center justify-between gap-4 text-xs text-ink-muted border-b border-paper-border pb-3">
                 <span className="font-bold text-accent font-latin">
-                  الدرس رقم {currentIndex + 1} من أصل {allLessons.length}
+                  {language === "en" ? "Lesson" : "الدرس"} {currentIndex + 1} / {allLessons.length}
                 </span>
                 {currentLesson.duration_minutes > 0 && (
                   <span className="font-latin">
-                    المدة التقديرية: {currentLesson.duration_minutes} دقيقة
+                    {currentLesson.duration_minutes} {t.classroom.minutes}
                   </span>
                 )}
               </div>
@@ -226,19 +228,19 @@ export default function LessonViewer({
               </h1>
 
               {currentLesson.description && (
-                <p className="text-sm text-ink-soft leading-relaxed">
+                <p className="text-xs sm:text-sm text-ink-soft leading-relaxed">
                   {currentLesson.description}
                 </p>
               )}
 
               {/* Study Notes & Markdown content */}
               {currentLesson.content_notes && (
-                <div className="pt-6 border-t border-paper-border">
-                  <h3 className="text-sm font-bold text-ink mb-3 flex items-center gap-2">
+                <div className="pt-5 border-t border-paper-border">
+                  <h2 className="text-xs sm:text-sm font-bold text-ink mb-3 flex items-center gap-2">
                     <FileText className="w-4 h-4 text-accent" />
-                    <span>ملاحظات وتطبيقات الدرس (الأستاذ حسين علي):</span>
-                  </h3>
-                  <div className="bg-paper-100 p-5 rounded-sm border border-paper-border text-xs sm:text-sm text-ink leading-relaxed whitespace-pre-wrap font-sans">
+                    <span>{t.classroom.notes}:</span>
+                  </h2>
+                  <div className="bg-paper-100 p-4 sm:p-5 rounded-sm border border-paper-border text-xs sm:text-sm text-ink leading-relaxed whitespace-pre-wrap font-sans">
                     {currentLesson.content_notes}
                   </div>
                 </div>
@@ -246,10 +248,10 @@ export default function LessonViewer({
 
               {/* Lesson Downloadable Resources */}
               {currentLesson.resources && currentLesson.resources.length > 0 && (
-                <div className="pt-6 border-t border-paper-border">
-                  <h3 className="text-sm font-bold text-ink mb-3 flex items-center gap-2">
+                <div className="pt-5 border-t border-paper-border">
+                  <h3 className="text-xs sm:text-sm font-bold text-ink mb-3 flex items-center gap-2">
                     <Download className="w-4 h-4 text-accent" />
-                    <span>الملفات والملحقات المرفقة مع الدرس:</span>
+                    <span>{t.classroom.resources}:</span>
                   </h3>
                   <div className="space-y-2">
                     {currentLesson.resources.map((res, i) => (
@@ -262,7 +264,7 @@ export default function LessonViewer({
                       >
                         <span className="font-semibold text-ink">{res.title}</span>
                         <span className="text-accent font-latin flex items-center gap-1 font-bold">
-                          <span>تحميل الملف</span>
+                          <span>{t.classroom.download}</span>
                           <Download className="w-3 h-3" />
                         </span>
                       </a>
@@ -274,7 +276,7 @@ export default function LessonViewer({
               {/* Telegram Q&A link */}
               <div className="pt-4 border-t border-paper-border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-paper-50 p-4 rounded-sm">
                 <span className="text-ink-soft">
-                  هل لديك استفسار أو نقطة غير واضحة في هذا الدرس؟
+                  {language === "en" ? "Have a question regarding this lesson?" : "هل لديك استفسار أو نقطة غير واضحة في هذا الدرس؟"}
                 </span>
                 <a
                   href={settings.telegram_url}
@@ -283,7 +285,7 @@ export default function LessonViewer({
                   className="inline-flex items-center gap-1.5 font-bold text-[#0c72a6] hover:underline shrink-0"
                 >
                   <Send className="w-3.5 h-3.5 text-[#229ED9]" />
-                  <span>اسأل الأستاذ في التلغرام</span>
+                  <span>{t.classroom.telegramDiscuss}</span>
                 </a>
               </div>
             </div>
@@ -295,16 +297,16 @@ export default function LessonViewer({
               <div className="flex items-center justify-between pb-3 border-b border-paper-border mb-3">
                 <h3 className="text-sm font-bold text-ink flex items-center gap-2">
                   <ListOrdered className="w-4 h-4 text-accent" />
-                  <span>قائمة دروس الكورس</span>
+                  <span>{t.classroom.curriculum}</span>
                 </h3>
                 <span className="text-xs text-ink-muted font-latin">
-                  {allLessons.length} دروس
+                  {allLessons.length} {t.courses.lessons}
                 </span>
               </div>
 
               {/* Progress Bar (Mobile and Sidebar) */}
               <div className="mb-4 bg-paper-100 p-2.5 rounded-sm border border-paper-border text-xs flex items-center justify-between">
-                <span className="text-ink-muted">نسبة إنجاز الكورس:</span>
+                <span className="text-ink-muted">{t.classroom.courseProgress}:</span>
                 <span className="font-bold text-accent font-latin">{progressPercentage}%</span>
               </div>
 
@@ -358,7 +360,7 @@ export default function LessonViewer({
                               isActive ? "text-paper-300" : "text-ink-muted"
                             }`}
                           >
-                            {l.duration_minutes} دقيقة
+                            {l.duration_minutes} {t.classroom.minutes}
                           </span>
                         )}
                       </div>

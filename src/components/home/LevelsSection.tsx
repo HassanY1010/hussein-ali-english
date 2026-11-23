@@ -1,35 +1,41 @@
+"use client";
+
+import React from "react";
 import Link from "next/link";
 import { Level } from "@/types/database";
-import { ArrowLeft, Check, Layers } from "lucide-react";
+import { ArrowLeft, ArrowRight, Layers } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface LevelsSectionProps {
   levels: Level[];
 }
 
 export default function LevelsSection({ levels }: LevelsSectionProps) {
+  const { t, language, dir } = useLanguage();
+
   return (
-    <section id="levels" className="py-20 border-b border-paper-border bg-paper-100/50">
+    <section id="levels" className="py-16 md:py-20 border-b border-paper-border bg-paper-100/50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
           <div>
             <div className="inline-flex items-center gap-1.5 text-xs font-bold text-accent uppercase font-latin tracking-wider mb-2">
-              <Layers className="w-3.5 h-3.5" />
-              <span>المسار التعليمي المتدرج</span>
+              <Layers className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>{t.levels.badge}</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black text-ink">
-              مستويات تعليم اللغة الإنجليزية
+              {t.levels.title}
             </h2>
-            <p className="text-sm text-ink-muted mt-2 max-w-xl">
-              تم تنظيم المناهج وفق المعايير الدولية للإطار الأوروبي (CEFR) لنضمن لك تطوراً تراكمياً ثابتاً من الأساس وحتى الطلاقة.
+            <p className="text-xs sm:text-sm text-ink-muted mt-2 max-w-xl leading-relaxed">
+              {t.levels.subtitle}
             </p>
           </div>
 
           <Link
             href="/courses"
-            className="inline-flex items-center gap-2 text-xs font-bold text-ink hover:text-accent transition-colors shrink-0"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-ink hover:text-accent transition-colors shrink-0"
           >
-            <span>استعراض كافة الكورسات حسب المستوى</span>
-            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>{t.levels.viewLevelCourses}</span>
+            {dir === "rtl" ? <ArrowLeft className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}
           </Link>
         </div>
 
@@ -49,11 +55,11 @@ export default function LevelsSection({ levels }: LevelsSectionProps) {
                   </span>
                 </div>
 
-                <h3 className="font-bold text-ink text-base mb-1 group-hover:text-accent transition-colors">
-                  {level.name_ar}
+                <h3 className="font-bold text-ink text-base mb-0.5 group-hover:text-accent transition-colors">
+                  {language === "en" ? level.name_en : level.name_ar}
                 </h3>
-                <span className="block text-xs text-ink-muted font-latin mb-3 ltr-text">
-                  {level.name_en}
+                <span className="block text-xs text-ink-muted font-latin mb-2.5 ltr-text">
+                  {language === "en" ? level.name_ar : level.name_en}
                 </span>
 
                 <p className="text-xs text-ink-soft leading-relaxed">
@@ -66,8 +72,12 @@ export default function LevelsSection({ levels }: LevelsSectionProps) {
                   href={`/courses?level=${level.slug}`}
                   className="text-xs font-semibold text-ink group-hover:text-accent inline-flex items-center gap-1 transition-colors"
                 >
-                  <span>كورسات هذا المستوى</span>
-                  <ArrowLeft className="w-3 h-3 transition-transform group-hover:-translate-x-1" />
+                  <span>{t.levels.viewLevelCourses}</span>
+                  {dir === "rtl" ? (
+                    <ArrowLeft className="w-3 h-3 transition-transform group-hover:-translate-x-1" />
+                  ) : (
+                    <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
+                  )}
                 </Link>
               </div>
             </div>

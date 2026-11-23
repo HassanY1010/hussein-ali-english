@@ -201,3 +201,15 @@ CREATE POLICY "Admins full access to settings" ON public.site_settings
   FOR ALL USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE profiles.id = auth.uid() AND profiles.role = 'admin')
   );
+
+-- ========================================================
+-- Performance Indexes
+-- ========================================================
+CREATE INDEX IF NOT EXISTS idx_courses_published ON courses(is_published);
+CREATE INDEX IF NOT EXISTS idx_courses_slug ON courses(slug);
+CREATE INDEX IF NOT EXISTS idx_courses_level ON courses(level_id);
+CREATE INDEX IF NOT EXISTS idx_courses_category ON courses(category_id);
+CREATE INDEX IF NOT EXISTS idx_lessons_course_order ON lessons(course_id, order_index);
+CREATE INDEX IF NOT EXISTS idx_lessons_published ON lessons(is_published);
+CREATE INDEX IF NOT EXISTS idx_lessons_slug ON lessons(slug);
+
