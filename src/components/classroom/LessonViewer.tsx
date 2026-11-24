@@ -155,13 +155,13 @@ export default function LessonViewer({
                 onClick={toggleCompletion}
                 className={`inline-flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-sm transition-all duration-200 border ${
                   isCompleted
-                    ? "bg-[#1f5c3f]/10 text-[#1f5c3f] border-[#1f5c3f]/30"
+                    ? "bg-emerald-50 text-emerald-800 border-emerald-300"
                     : "bg-paper-50 hover:bg-paper-100 text-ink-soft border-paper-border"
                 }`}
               >
                 {isCompleted ? (
                   <>
-                    <CheckCircle className="w-4 h-4 text-[#1f5c3f]" />
+                    <CheckCircle className="w-4 h-4 text-emerald-600" />
                     <span>{language === "en" ? "Completed (Click to undo)" : "تم إكمال هذا الدرس (اضغط للإلغاء)"}</span>
                   </>
                 ) : (
@@ -330,7 +330,7 @@ export default function LessonViewer({
                         {isLessonDone ? (
                           <CheckCircle
                             className={`w-4 h-4 ${
-                              isActive ? "text-accent" : "text-[#1f5c3f]"
+                              isActive ? "text-accent" : "text-emerald-600"
                             }`}
                           />
                         ) : (

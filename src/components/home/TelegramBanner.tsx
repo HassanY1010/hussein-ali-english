@@ -17,7 +17,7 @@ export default function TelegramBanner({ settings }: TelegramBannerProps) {
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="relative overflow-hidden bg-ink text-paper-50 rounded-sm p-6 sm:p-10 md:p-12 border border-ink-light">
           {/* Subtle accent border on top */}
-          <div className="absolute top-0 right-0 left-0 h-1 bg-[#229ED9]" />
+          <div className="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-[#D4AF37] via-[#229ED9] to-[#C5A059]" />
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
             <div className="md:col-span-8 space-y-3">

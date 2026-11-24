@@ -771,7 +771,7 @@ export default function LessonManager({ course, initialLessons }: LessonManagerP
                   <span>•</span>
 
                   {lesson.is_published ? (
-                    <span className="text-[#1f5c3f] font-semibold">منشور</span>
+                    <span className="text-emerald-700 font-semibold">منشور</span>
                   ) : (
                     <span className="text-amber-700 font-semibold">مسودة</span>
                   )}

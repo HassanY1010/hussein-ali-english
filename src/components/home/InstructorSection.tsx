@@ -16,8 +16,8 @@ export default function InstructorSection({ settings }: InstructorSectionProps) 
     <section id="about" className="py-16 md:py-24 border-b border-paper-border">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="relative bg-white border border-paper-border/80 rounded-2xl p-6 sm:p-10 md:p-12 shadow-lifted overflow-hidden transition-all duration-300 hover:shadow-xl">
-          {/* Subtle top accent gradient */}
-          <div className="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-accent/20 via-accent to-accent/20" />
+          {/* Subtle top accent gradient combining Royal Gold, Muted Honey, and Bronze */}
+          <div className="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-[#D4AF37] via-[#C5A059] to-[#8C7853]" />
 
           {/* Subtle brand emblem watermark */}
           <div className="absolute -bottom-10 -left-10 w-64 h-64 rounded-full overflow-hidden opacity-[0.03] pointer-events-none -z-0">

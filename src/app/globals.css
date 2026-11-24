@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --background: #FCFBF8;
-  --foreground: #13211D;
+  --background: #FAF9F5;
+  --foreground: #1A2F4C;
 }
 
 html {
@@ -59,9 +59,15 @@ html[lang="en"] .font-heading {
   text-align: right;
 }
 
+/* Royal selection highlight */
+::selection {
+  background-color: #1A2F4C;
+  color: #D4AF37;
+}
+
 /* Editorial line dividers */
 .hairline-border {
-  border-color: #E7E3D8;
+  border-color: #E5DFD1;
 }
 
 /* Custom subtle scrollbar */
@@ -70,19 +76,19 @@ html[lang="en"] .font-heading {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #F8F6F0;
+  background: #F5F3EC;
 }
 ::-webkit-scrollbar-thumb {
-  background: #D5CFC1;
+  background: #C5A059;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #BA7C2C;
+  background: #D4AF37;
 }
 
 /* Accessibility: Focus outline for keyboard navigation */
 *:focus-visible {
-  outline: 2px solid #BA7C2C;
+  outline: 2px solid #D4AF37;
   outline-offset: 2px;
 }
 

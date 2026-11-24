@@ -91,8 +91,8 @@ export default function HeroSection({ settings }: HeroSectionProps) {
           {/* Teacher Academic Panel */}
           <div className="lg:col-span-5">
             <div className="relative bg-white border border-paper-border rounded-xl p-6 sm:p-8 shadow-lifted transition-all duration-300 hover:shadow-xl hover:border-accent/40 overflow-hidden">
-              {/* Refined gradient top accent */}
-              <div className="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-accent/30 via-accent to-accent/30" />
+              {/* Refined gradient top accent combining Royal Gold, Muted Honey, and Bronze */}
+              <div className="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-[#D4AF37] via-[#C5A059] to-[#8C7853]" />
 
               {/* Header: Teacher Info + Monogram Avatar */}
               <div className="flex items-start justify-between pb-5 border-b border-paper-border/80 gap-3">

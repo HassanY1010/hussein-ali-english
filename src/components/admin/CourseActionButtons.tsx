@@ -48,7 +48,7 @@ export default function CourseActionButtons({
         disabled={isPending}
         className={`px-2.5 py-1 text-xs font-semibold rounded-sm transition-colors flex items-center gap-1 border ${
           isPublished
-            ? "bg-[#1f5c3f]/10 text-[#1f5c3f] border-[#1f5c3f]/20 hover:bg-red-50 hover:text-red-700 hover:border-red-200"
+            ? "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-red-50 hover:text-red-700 hover:border-red-200"
             : "bg-amber-50 text-amber-800 border-amber-200 hover:bg-green-50 hover:text-green-800"
         }`}
         title={isPublished ? "إلغاء النشر (تحويل لمسودة)" : "نشر الكورس للطلاب"}
