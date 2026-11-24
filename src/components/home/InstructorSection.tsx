@@ -19,11 +19,20 @@ export default function InstructorSection({ settings }: InstructorSectionProps) 
           {/* Subtle top accent gradient */}
           <div className="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-accent/20 via-accent to-accent/20" />
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          {/* Subtle brand emblem watermark */}
+          <div className="absolute -bottom-10 -left-10 w-64 h-64 rounded-full overflow-hidden opacity-[0.03] pointer-events-none -z-0">
+            <img src="/images/logo.jpg" alt="" className="w-full h-full object-contain" />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center relative z-10">
             {/* Visual Monogram & Identity Card (in RTL on the right) */}
             <div className="lg:col-span-4 flex flex-col items-center text-center p-6 bg-paper-50 rounded-xl border border-paper-border/60 shadow-xs">
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-ink text-paper-50 flex items-center justify-center font-editorial text-4xl sm:text-5xl font-bold shadow-md shadow-ink/10 mb-4 border-2 border-accent/40 shrink-0">
-                HA
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-ink shadow-md shadow-ink/10 mb-4 border-2 border-accent/40 shrink-0">
+                <img
+                  src="/images/logo.jpg"
+                  alt={settings.instructor_name}
+                  className="w-full h-full object-cover"
+                />
               </div>
 
               <h3 className="text-xl sm:text-2xl font-black text-ink tracking-tight">

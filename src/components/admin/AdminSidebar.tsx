@@ -37,8 +37,8 @@ export default function AdminSidebar({ onCloseMobile }: AdminSidebarProps) {
         {/* Brand & Mobile Close */}
         <div className="p-5 sm:p-6 border-b border-ink-soft/30 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-sm bg-accent text-paper-50 flex items-center justify-center font-editorial text-lg font-bold shrink-0">
-              HA
+            <div className="w-9 h-9 rounded-lg overflow-hidden border border-accent/40 shadow-sm shrink-0 bg-ink">
+              <img src="/images/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
             </div>
             <div>
               <h2 className="text-sm font-bold text-paper-50 leading-tight">

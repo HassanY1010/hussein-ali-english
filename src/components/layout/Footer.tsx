@@ -20,8 +20,12 @@ export default function Footer({ settings }: FooterProps) {
           {/* Brand & Editorial Manifesto */}
           <div className="md:col-span-5 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-sm bg-accent text-paper-50 flex items-center justify-center font-editorial text-lg font-bold">
-                HA
+              <div className="w-10 h-10 rounded-lg overflow-hidden border border-accent/40 shadow-sm shrink-0 bg-ink">
+                <img
+                  src="/images/logo.jpg"
+                  alt={language === "en" ? settings.site_name_en : settings.site_name}
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-paper-50 leading-tight">

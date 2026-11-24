@@ -18,6 +18,10 @@ export default function HeroSection({ settings }: HeroSectionProps) {
       {/* Editorial backdrop accents */}
       <div className="absolute top-0 right-0 w-80 h-80 bg-paper-200/50 rounded-full blur-3xl -z-10 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-72 h-72 bg-accent-light/60 rounded-full blur-3xl -z-10 pointer-events-none" />
+      {/* Subtle brand emblem watermark */}
+      <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-[420px] h-[420px] rounded-full overflow-hidden opacity-[0.035] pointer-events-none -z-10 blur-[1px]">
+        <img src="/images/logo.jpg" alt="" className="w-full h-full object-contain" />
+      </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
@@ -105,8 +109,12 @@ export default function HeroSection({ settings }: HeroSectionProps) {
                   </p>
                 </div>
 
-                <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-xl bg-ink text-paper-50 flex items-center justify-center font-editorial text-2xl sm:text-3xl font-bold shadow-md shadow-ink/15 border-2 border-accent/40 shrink-0">
-                  HA
+                <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-ink shadow-md shadow-ink/15 border-2 border-accent/40 shrink-0">
+                  <img
+                    src="/images/logo.jpg"
+                    alt={settings.instructor_name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               </div>
 

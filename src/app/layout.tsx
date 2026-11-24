@@ -22,12 +22,24 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || "https://hussein-ali-english.onrender.com"
   ),
+  icons: {
+    icon: "/images/logo.jpg",
+    apple: "/images/logo.jpg",
+  },
   openGraph: {
     title: "حسين علي | أكاديمية تعلم اللغة الإنجليزية",
     description:
       "تعلّم اللغة الإنجليزية بمنهجية علمية واضحة ومبسطة مع الأستاذ حسين علي. كورسات شاملة في القواعد، المحادثة والنطق.",
     url: "https://hussein-ali-english.onrender.com",
     siteName: "حسين علي - تعلم الإنجليزية",
+    images: [
+      {
+        url: "/images/logo.jpg",
+        width: 800,
+        height: 800,
+        alt: "حسين علي | أكاديمية تعلم اللغة الإنجليزية",
+      },
+    ],
     locale: "ar_IQ",
     type: "website",
   },
@@ -36,6 +48,7 @@ export const metadata: Metadata = {
     title: "حسين علي | أكاديمية تعلم اللغة الإنجليزية",
     description:
       "تعلّم اللغة الإنجليزية بمنهجية علمية واضحة ومبسطة مع الأستاذ حسين علي. كورسات شاملة في القواعد، المحادثة والنطق.",
+    images: ["/images/logo.jpg"],
   },
   alternates: {
     canonical: "/",
@@ -60,7 +73,7 @@ export default function RootLayout({
     name: "Hussein Ali English Academy",
     alternateName: "أكاديمية حسين علي لتعلم الإنجليزية",
     url: "https://hussein-ali-english.onrender.com",
-    logo: "https://hussein-ali-english.onrender.com/favicon.ico",
+    logo: "https://hussein-ali-english.onrender.com/images/logo.jpg",
     description: "المنصة الرسمية للأستاذ حسين علي لتعليم اللغة الإنجليزية بمنهجية علمية واضحة ومبسطة.",
     founder: {
       "@type": "Person",

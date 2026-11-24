@@ -49,8 +49,8 @@ export default function AdminHeader({ user, onToggleMobileDrawer }: AdminHeaderP
         </a>
 
         <div className="flex items-center gap-2 pl-2 border-r border-paper-border">
-          <div className="w-7 h-7 rounded-sm bg-ink text-paper-50 flex items-center justify-center font-bold text-xs shrink-0">
-            HA
+          <div className="w-7 h-7 rounded-sm overflow-hidden border border-accent/40 bg-ink shrink-0">
+            <img src="/images/logo.jpg" alt={user.name} className="w-full h-full object-cover" />
           </div>
           <div className="hidden sm:block text-right">
             <span className="block font-bold text-ink leading-tight text-xs">

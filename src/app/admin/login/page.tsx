@@ -33,10 +33,10 @@ export default function AdminLoginPage() {
       </div>
 
       <div className="max-w-md w-full">
-        {/* Monogram brand */}
+        {/* Brand logo */}
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-sm bg-ink text-paper-50 flex items-center justify-center font-editorial text-2xl font-bold mx-auto mb-3 shadow-lifted">
-            HA
+          <div className="w-16 h-16 rounded-xl overflow-hidden bg-ink shadow-lifted mx-auto mb-3 border-2 border-accent/40 shrink-0">
+            <img src="/images/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-2xl font-black text-ink">
             {t.admin.login.title}

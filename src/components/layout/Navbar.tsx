@@ -20,8 +20,12 @@ export default function Navbar({ settings }: NavbarProps) {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
         {/* Brand identity */}
         <Link href="/" className="group flex items-center gap-3">
-          <div className="w-10 h-10 rounded-sm bg-ink text-paper-50 flex items-center justify-center font-editorial text-xl font-bold tracking-tight shadow-fine group-hover:bg-accent transition-colors shrink-0">
-            HA
+          <div className="w-11 h-11 rounded-lg overflow-hidden border border-accent/40 shadow-sm shrink-0 bg-ink">
+            <img
+              src="/images/logo.jpg"
+              alt={settings.site_name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
           </div>
           <div className="flex flex-col">
             <span className="text-sm sm:text-base md:text-lg font-bold text-ink leading-tight tracking-tight">
