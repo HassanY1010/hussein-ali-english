@@ -29,7 +29,11 @@ interface CourseDetailsPageProps {
 export async function generateMetadata({
   params,
 }: CourseDetailsPageProps): Promise<Metadata> {
-  const course = await getCourseBySlug(params.slug, { publishedOnly: true });
+  let slug = params.slug;
+  try {
+    slug = decodeURIComponent(params.slug);
+  } catch {}
+  const course = await getCourseBySlug(slug, { publishedOnly: true });
   if (!course) {
     return { title: "الدورة غير موجودة | Course Not Found" };
   }
@@ -53,9 +57,14 @@ export async function generateMetadata({
 export default async function CourseDetailsPage({
   params,
 }: CourseDetailsPageProps) {
+  let slug = params.slug;
+  try {
+    slug = decodeURIComponent(params.slug);
+  } catch {}
+
   const [settings, course] = await Promise.all([
     getSiteSettings(),
-    getCourseBySlug(params.slug, { publishedOnly: true }),
+    getCourseBySlug(slug, { publishedOnly: true }),
   ]);
 
   if (!course) {

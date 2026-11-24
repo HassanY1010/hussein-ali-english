@@ -242,8 +242,26 @@ export async function getCourseBySlug(
   slug: string,
   options?: { publishedOnly?: boolean }
 ): Promise<Course | null> {
+  let decodedSlug = slug;
+  try {
+    decodedSlug = decodeURIComponent(slug);
+  } catch {}
+
   const courses = await getCourses(options);
-  return courses.find((c) => c.slug === slug) || null;
+  return (
+    courses.find((c) => {
+      let cDecoded = c.slug;
+      try {
+        cDecoded = decodeURIComponent(c.slug);
+      } catch {}
+      return (
+        c.slug === slug ||
+        c.slug === decodedSlug ||
+        cDecoded === slug ||
+        cDecoded === decodedSlug
+      );
+    }) || null
+  );
 }
 
 export async function getCourseById(id: string): Promise<Course | null> {
@@ -287,11 +305,31 @@ export async function getLessonBySlug(
   lessonSlug: string,
   options?: { publishedOnly?: boolean }
 ): Promise<{ course: Course; lesson: Lesson; allLessons: Lesson[] } | null> {
-  const course = await getCourseBySlug(courseSlug, options);
+  let decodedCourseSlug = courseSlug;
+  let decodedLessonSlug = lessonSlug;
+  try {
+    decodedCourseSlug = decodeURIComponent(courseSlug);
+  } catch {}
+  try {
+    decodedLessonSlug = decodeURIComponent(lessonSlug);
+  } catch {}
+
+  const course = await getCourseBySlug(decodedCourseSlug, options);
   if (!course) return null;
 
   const allLessons = await getCourseLessons(course.id, options);
-  const lesson = allLessons.find((l) => l.slug === lessonSlug);
+  const lesson = allLessons.find((l) => {
+    let lDecoded = l.slug;
+    try {
+      lDecoded = decodeURIComponent(l.slug);
+    } catch {}
+    return (
+      l.slug === lessonSlug ||
+      l.slug === decodedLessonSlug ||
+      lDecoded === lessonSlug ||
+      lDecoded === decodedLessonSlug
+    );
+  });
   if (!lesson) return null;
 
   return { course, lesson, allLessons };

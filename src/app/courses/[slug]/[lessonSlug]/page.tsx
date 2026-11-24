@@ -13,7 +13,16 @@ interface LessonPageProps {
 }
 
 export async function generateMetadata({ params }: LessonPageProps): Promise<Metadata> {
-  const result = await getLessonBySlug(params.slug, params.lessonSlug, { publishedOnly: true });
+  let slug = params.slug;
+  let lessonSlug = params.lessonSlug;
+  try {
+    slug = decodeURIComponent(params.slug);
+  } catch {}
+  try {
+    lessonSlug = decodeURIComponent(params.lessonSlug);
+  } catch {}
+
+  const result = await getLessonBySlug(slug, lessonSlug, { publishedOnly: true });
   if (!result) {
     return { title: "الدرس غير موجود" };
   }
@@ -24,8 +33,17 @@ export async function generateMetadata({ params }: LessonPageProps): Promise<Met
 }
 
 export default async function LessonPage({ params }: LessonPageProps) {
+  let slug = params.slug;
+  let lessonSlug = params.lessonSlug;
+  try {
+    slug = decodeURIComponent(params.slug);
+  } catch {}
+  try {
+    lessonSlug = decodeURIComponent(params.lessonSlug);
+  } catch {}
+
   const [result, settings] = await Promise.all([
-    getLessonBySlug(params.slug, params.lessonSlug, { publishedOnly: true }),
+    getLessonBySlug(slug, lessonSlug, { publishedOnly: true }),
     getSiteSettings(),
   ]);
 
