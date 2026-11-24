@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { getAdminSession } from "@/lib/auth/session";
 import {
   createCourse,
@@ -100,10 +101,11 @@ export async function saveCourseAction(prevState: any, formData: FormData) {
     revalidatePath("/");
     revalidatePath("/courses");
     revalidatePath("/admin/courses");
-    return { success: true, message: "تم حفظ الكورس بنجاح!" };
   } catch (err: any) {
     return { error: err.message || "حدث خطأ أثناء حفظ الكورس." };
   }
+
+  redirect("/admin/courses");
 }
 
 export async function deleteCourseAction(courseId: string) {

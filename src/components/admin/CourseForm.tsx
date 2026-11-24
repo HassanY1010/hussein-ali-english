@@ -4,7 +4,7 @@ import { useFormState, useFormStatus } from "react-dom";
 import Link from "next/link";
 import { Course, Category, Level } from "@/types/database";
 import { saveCourseAction } from "@/lib/actions/courses";
-import { ArrowLeft, Save, AlertCircle, CheckCircle2, Upload, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, AlertCircle, Upload, Loader2 } from "lucide-react";
 import { useState } from "react";
 
 interface CourseFormProps {
@@ -73,13 +73,6 @@ export default function CourseForm({ course, categories, levels }: CourseFormPro
         <div className="p-4 rounded-sm bg-red-50 border border-red-200 text-red-800 text-xs flex items-center gap-2">
           <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
           <span>{state.error}</span>
-        </div>
-      )}
-
-      {state?.success && (
-        <div className="p-4 rounded-sm bg-green-50 border border-green-200 text-green-800 text-xs flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
-          <span>{state.message}</span>
         </div>
       )}
 
