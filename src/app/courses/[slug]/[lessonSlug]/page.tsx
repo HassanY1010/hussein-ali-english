@@ -26,9 +26,46 @@ export async function generateMetadata({ params }: LessonPageProps): Promise<Met
   if (!result) {
     return { title: "الدرس غير موجود" };
   }
+
+  const siteUrl = "https://hussein-ali-english.onrender.com";
+  const lessonUrl = `${siteUrl}/courses/${encodeURIComponent(result.course.slug)}/${encodeURIComponent(result.lesson.slug)}`;
+  let imageUrl = result.course.thumbnail_url || `${siteUrl}/images/logo.jpg`;
+  if (imageUrl.startsWith("/")) {
+    imageUrl = `${siteUrl}${imageUrl}`;
+  }
+  const title = `${result.lesson.title} - ${result.course.title}`;
+  const description =
+    result.lesson.description ||
+    result.course.short_description ||
+    "شرح تفاعلي مبسط للدرس مع الأستاذ حسين علي.";
+
   return {
-    title: `${result.lesson.title} | ${result.course.title}`,
-    description: result.lesson.description || result.course.short_description,
+    title: `${title} | أكاديمية حسين علي`,
+    description: description,
+    openGraph: {
+      title: `${title} | أكاديمية حسين علي`,
+      description: description,
+      url: lessonUrl,
+      siteName: "أكاديمية حسين علي لتعليم اللغة الإنجليزية",
+      images: [
+        {
+          url: imageUrl,
+          secureUrl: imageUrl,
+          width: 800,
+          height: 800,
+          alt: title,
+          type: "image/jpeg",
+        },
+      ],
+      locale: "ar_AR",
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | أكاديمية حسين علي`,
+      description: description,
+      images: [imageUrl],
+    },
   };
 }
 

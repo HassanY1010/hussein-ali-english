@@ -14,10 +14,39 @@ import { HelpCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
+const coursesTitle = "جميع الكورسات والدروس | أكاديمية حسين علي";
+const coursesDescription =
+  "استكشف كافة دورات تعليم اللغة الإنجليزية للأستاذ حسين علي. دورات في القواعد، المحادثة، النطق والمفردات مع تنظيم كامل حسب المستويات.";
+const siteUrl = "https://hussein-ali-english.onrender.com";
+const defaultImageUrl = `${siteUrl}/images/logo.jpg`;
+
 export const metadata: Metadata = {
-  title: "جميع الكورسات والدروس | Hussein Ali English Academy",
-  description:
-    "استكشف كافة دورات تعليم اللغة الإنجليزية للأستاذ حسين علي. دورات في القواعد، المحادثة، النطق والمفردات مع تنظيم كامل حسب المستويات.",
+  title: coursesTitle,
+  description: coursesDescription,
+  openGraph: {
+    title: coursesTitle,
+    description: coursesDescription,
+    url: `${siteUrl}/courses`,
+    siteName: "أكاديمية حسين علي لتعليم اللغة الإنجليزية",
+    images: [
+      {
+        url: defaultImageUrl,
+        secureUrl: defaultImageUrl,
+        width: 800,
+        height: 800,
+        alt: coursesTitle,
+        type: "image/jpeg",
+      },
+    ],
+    locale: "ar_AR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: coursesTitle,
+    description: coursesDescription,
+    images: [defaultImageUrl],
+  },
 };
 
 interface CoursesPageProps {

@@ -37,19 +37,45 @@ export async function generateMetadata({
   if (!course) {
     return { title: "الدورة غير موجودة | Course Not Found" };
   }
+
+  const siteUrl = "https://hussein-ali-english.onrender.com";
+  const courseUrl = `${siteUrl}/courses/${encodeURIComponent(course.slug)}`;
+  let imageUrl = course.thumbnail_url || `${siteUrl}/images/logo.jpg`;
+  if (imageUrl.startsWith("/")) {
+    imageUrl = `${siteUrl}${imageUrl}`;
+  }
+  const title = `${course.title} | أكاديمية حسين علي`;
+  const description =
+    course.short_description ||
+    course.description ||
+    "كورس تعليمي شامل في اللغة الإنجليزية مع الأستاذ حسين علي.";
+
   return {
     title: course.title,
-    description: course.short_description,
+    description: description,
     openGraph: {
-      title: `${course.title} | أكاديمية حسين علي`,
-      description: course.short_description,
-      images: course.thumbnail_url ? [course.thumbnail_url] : [],
+      title: title,
+      description: description,
+      url: courseUrl,
+      siteName: "أكاديمية حسين علي لتعليم اللغة الإنجليزية",
+      images: [
+        {
+          url: imageUrl,
+          secureUrl: imageUrl,
+          width: 800,
+          height: 800,
+          alt: course.title,
+          type: "image/jpeg",
+        },
+      ],
+      locale: "ar_AR",
       type: "article",
     },
     twitter: {
       card: "summary_large_image",
-      title: course.title,
-      description: course.short_description,
+      title: title,
+      description: description,
+      images: [imageUrl],
     },
   };
 }

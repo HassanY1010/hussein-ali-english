@@ -2,13 +2,19 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 
+const siteUrl = "https://hussein-ali-english.onrender.com";
+const defaultImageUrl = `${siteUrl}/images/logo.jpg`;
+const defaultTitle = "حسين علي | أكاديمية تعلم اللغة الإنجليزية";
+const defaultDescription =
+  "المنصة التعليمية الرسمية للأستاذ حسين علي لتعليم اللغة الإنجليزية من الصفر حتى الاحتراف. شروحات مبسطة، كورسات شاملة، دروس تفاعلية ومتابعة مستمرة.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
-    default: "حسين علي | أكاديمية تعلم اللغة الإنجليزية",
+    default: defaultTitle,
     template: "%s | حسين علي - تعلم الإنجليزية",
   },
-  description:
-    "المنصة التعليمية الرسمية للأستاذ حسين علي لتعليم اللغة الإنجليزية من الصفر حتى الاحتراف. شروحات مبسطة، كورس شامل، دروس تفاعلية ومتابعة مستمرة.",
+  description: defaultDescription,
   keywords: [
     "تعلم الإنجليزية",
     "حسين علي",
@@ -19,36 +25,33 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "حسين علي", url: "https://t.me/gccxic" }],
   creator: "حسين علي",
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://hussein-ali-english.onrender.com"
-  ),
   icons: {
     icon: "/images/logo.jpg",
     apple: "/images/logo.jpg",
   },
   openGraph: {
-    title: "حسين علي | أكاديمية تعلم اللغة الإنجليزية",
-    description:
-      "تعلّم اللغة الإنجليزية بمنهجية علمية واضحة ومبسطة مع الأستاذ حسين علي. كورسات شاملة في القواعد، المحادثة والنطق.",
-    url: "https://hussein-ali-english.onrender.com",
-    siteName: "حسين علي - تعلم الإنجليزية",
+    title: defaultTitle,
+    description: defaultDescription,
+    url: siteUrl,
+    siteName: "أكاديمية حسين علي لتعليم اللغة الإنجليزية",
     images: [
       {
-        url: "/images/logo.jpg",
+        url: defaultImageUrl,
+        secureUrl: defaultImageUrl,
         width: 800,
         height: 800,
-        alt: "حسين علي | أكاديمية تعلم اللغة الإنجليزية",
+        alt: defaultTitle,
+        type: "image/jpeg",
       },
     ],
-    locale: "ar_IQ",
+    locale: "ar_AR",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "حسين علي | أكاديمية تعلم اللغة الإنجليزية",
-    description:
-      "تعلّم اللغة الإنجليزية بمنهجية علمية واضحة ومبسطة مع الأستاذ حسين علي. كورسات شاملة في القواعد، المحادثة والنطق.",
-    images: ["/images/logo.jpg"],
+    title: defaultTitle,
+    description: defaultDescription,
+    images: [defaultImageUrl],
   },
   alternates: {
     canonical: "/",
@@ -87,6 +90,7 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" className="scroll-smooth">
       <head>
+        <link rel="image_src" href={defaultImageUrl} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
