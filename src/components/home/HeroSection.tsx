@@ -86,44 +86,58 @@ export default function HeroSection({ settings }: HeroSectionProps) {
 
           {/* Teacher Academic Panel */}
           <div className="lg:col-span-5">
-            <div className="relative bg-white border border-paper-border rounded-sm p-6 sm:p-8 shadow-fine">
-              <div className="absolute top-0 right-0 left-0 h-1 bg-accent rounded-t-sm" />
+            <div className="relative bg-white border border-paper-border rounded-xl p-6 sm:p-8 shadow-lifted transition-all duration-300 hover:shadow-xl hover:border-accent/40 overflow-hidden">
+              {/* Refined gradient top accent */}
+              <div className="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-accent/30 via-accent to-accent/30" />
 
-              <div className="flex items-start justify-between pb-4 border-b border-paper-border">
-                <div>
-                  <span className="text-xs font-bold text-accent uppercase font-latin tracking-wider">
-                    {t.hero.instructorCard}
+              {/* Header: Teacher Info + Monogram Avatar */}
+              <div className="flex items-start justify-between pb-5 border-b border-paper-border/80 gap-3">
+                <div className="space-y-1">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-accent/10 text-accent text-[11px] font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                    <span>{t.hero.instructorCard}</span>
                   </span>
-                  <h3 className="text-lg sm:text-xl font-bold text-ink mt-0.5">
+                  <h3 className="text-xl sm:text-2xl font-black text-ink tracking-tight">
                     {settings.instructor_name}
                   </h3>
-                  <p className="text-xs text-ink-muted">
+                  <p className="text-xs text-ink-muted font-medium">
                     {language === "en" ? t.hero.instructorTitle : settings.instructor_title}
                   </p>
                 </div>
-                <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-sm bg-ink text-paper-50 flex items-center justify-center font-editorial text-xl sm:text-2xl font-bold shrink-0">
+
+                <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-xl bg-ink text-paper-50 flex items-center justify-center font-editorial text-2xl sm:text-3xl font-bold shadow-md shadow-ink/15 border-2 border-accent/40 shrink-0">
                   HA
                 </div>
               </div>
 
-              <div className="py-4 space-y-3 text-xs sm:text-sm text-ink-soft leading-relaxed">
-                <p className="italic bg-paper-100 p-3 rounded-sm border-r-2 border-accent">
-                  "{language === "en" ? t.instructor.quote : settings.instructor_message}"
-                </p>
-                <p className="text-xs text-ink-muted leading-relaxed">
+              {/* Quote Block */}
+              <div className="py-4 space-y-3.5">
+                <div className="relative p-4 bg-gradient-to-br from-paper-100 to-accent-light/40 rounded-lg border-r-4 border-accent text-xs sm:text-sm text-ink-soft leading-relaxed shadow-xs">
+                  <p className="font-medium italic">
+                    "{language === "en" ? t.instructor.quote : settings.instructor_message}"
+                  </p>
+                </div>
+
+                {/* Bio */}
+                <p className="text-xs text-ink-muted leading-relaxed px-1">
                   {settings.instructor_bio}
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-paper-border flex flex-wrap items-center justify-between text-xs gap-2">
-                <span className="text-ink-muted">{t.hero.directSupport}</span>
+              {/* Footer: Live Support & Telegram handle */}
+              <div className="pt-4 border-t border-paper-border/80 flex flex-wrap items-center justify-between text-xs gap-2">
+                <div className="flex items-center gap-2 text-ink-muted font-medium">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>{t.hero.directSupport}</span>
+                </div>
+
                 <a
                   href={settings.telegram_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-bold text-[#0b6a9c] hover:underline font-latin ltr-text flex items-center gap-1"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#229ED9]/10 hover:bg-[#229ED9] text-[#0c72a6] hover:text-white font-bold font-latin ltr-text transition-all duration-200 border border-[#229ED9]/30"
                 >
-                  <Send className="w-3 h-3 text-[#229ED9] shrink-0" />
+                  <Send className="w-3 h-3 shrink-0" />
                   <span>{settings.telegram_channel_name}</span>
                 </a>
               </div>
