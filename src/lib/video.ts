@@ -1,7 +1,37 @@
-export function getEmbedUrl(url: string, provider: string): { type: "iframe" | "video"; embedUrl: string } {
+export function getEmbedUrl(
+  url: string,
+  provider?: string
+): { type: "iframe" | "video"; embedUrl: string } {
   if (!url) return { type: "iframe", embedUrl: "" };
 
   const cleanUrl = url.trim();
+
+  // Cloudflare Stream
+  if (
+    provider === "cloudflare" ||
+    cleanUrl.includes("videodelivery.net") ||
+    cleanUrl.includes("cloudflarestream.com")
+  ) {
+    // If it's already an iframe URL
+    if (cleanUrl.includes("iframe.videodelivery.net")) {
+      return {
+        type: "iframe",
+        embedUrl: cleanUrl,
+      };
+    }
+    // Extract UID if given
+    const cfMatch = cleanUrl.match(/(?:videodelivery\.net|cloudflarestream\.com)\/([a-zA-Z0-9]+)/);
+    if (cfMatch && cfMatch[1]) {
+      return {
+        type: "iframe",
+        embedUrl: `https://iframe.videodelivery.net/${cfMatch[1]}`,
+      };
+    }
+    return {
+      type: "iframe",
+      embedUrl: cleanUrl,
+    };
+  }
 
   // YouTube detection
   const ytMatch = cleanUrl.match(
@@ -16,7 +46,9 @@ export function getEmbedUrl(url: string, provider: string): { type: "iframe" | "
   }
 
   // Vimeo detection
-  const vimeoMatch = cleanUrl.match(/vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|)(\d+)(?:$|\/|\?)/);
+  const vimeoMatch = cleanUrl.match(
+    /vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|)(\d+)(?:$|\/|\?)/
+  );
   if (vimeoMatch && vimeoMatch[1]) {
     return {
       type: "iframe",
@@ -24,8 +56,15 @@ export function getEmbedUrl(url: string, provider: string): { type: "iframe" | "
     };
   }
 
-  // Direct MP4 / WebM
-  if (cleanUrl.endsWith(".mp4") || cleanUrl.endsWith(".webm") || provider === "direct") {
+  // Direct MP4 / WebM / MOV / Storage Uploads
+  if (
+    cleanUrl.endsWith(".mp4") ||
+    cleanUrl.endsWith(".webm") ||
+    cleanUrl.endsWith(".mov") ||
+    cleanUrl.includes("/storage/v1/object/public/") ||
+    provider === "direct" ||
+    provider === "upload"
+  ) {
     return {
       type: "video",
       embedUrl: cleanUrl,

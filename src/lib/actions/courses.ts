@@ -160,11 +160,22 @@ export async function saveLessonAction(prevState: any, formData: FormData) {
     slug = generateSlug(title);
   }
 
-  // Detect video provider
-  let videoProvider: "youtube" | "vimeo" | "direct" | "external" = "youtube";
-  if (videoUrl.includes("vimeo.com")) {
+  // Detect video provider & source type
+  const videoSourceType = (formData.get("video_source_type") as string) === "upload" ? "upload" : "url";
+  const videoId = (formData.get("video_id") as string)?.trim() || "";
+  const customProvider = (formData.get("video_provider") as string)?.trim();
+  const processingStatus = (formData.get("processing_status") as any) || "ready";
+
+  if (isPublished && !videoUrl) {
+    return { error: "لا يمكن نشر الدرس بدون اكتمال إضافة أو رفع الفيديو الخاص به." };
+  }
+
+  let videoProvider: "youtube" | "vimeo" | "direct" | "external" | "cloudflare" | "upload" = "youtube";
+  if (customProvider === "cloudflare" || videoUrl.includes("videodelivery.net") || videoUrl.includes("cloudflarestream.com")) {
+    videoProvider = "cloudflare";
+  } else if (videoUrl.includes("vimeo.com")) {
     videoProvider = "vimeo";
-  } else if (videoUrl.endsWith(".mp4") || videoUrl.endsWith(".webm")) {
+  } else if (videoUrl.endsWith(".mp4") || videoUrl.endsWith(".webm") || videoUrl.endsWith(".mov") || videoSourceType === "upload") {
     videoProvider = "direct";
   } else if (!videoUrl.includes("youtube.com") && !videoUrl.includes("youtu.be")) {
     videoProvider = "external";
@@ -178,6 +189,9 @@ export async function saveLessonAction(prevState: any, formData: FormData) {
         description,
         video_url: videoUrl,
         video_provider: videoProvider,
+        video_source_type: videoSourceType,
+        video_id: videoId,
+        processing_status: processingStatus,
         duration_minutes: durationMinutes,
         content_notes: contentNotes,
         is_published: isPublished,
@@ -190,6 +204,9 @@ export async function saveLessonAction(prevState: any, formData: FormData) {
         description,
         video_url: videoUrl,
         video_provider: videoProvider,
+        video_source_type: videoSourceType,
+        video_id: videoId,
+        processing_status: processingStatus,
         duration_minutes: durationMinutes,
         content_notes: contentNotes,
         resources: [],

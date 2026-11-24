@@ -55,6 +55,10 @@ export interface LessonResource {
   type?: "pdf" | "link" | "doc";
 }
 
+export type VideoProvider = "youtube" | "vimeo" | "direct" | "external" | "cloudflare" | "upload";
+export type VideoSourceType = "url" | "upload";
+export type VideoProcessingStatus = "ready" | "processing" | "pending" | "error";
+
 export interface Lesson {
   id: string;
   course_id: string;
@@ -62,7 +66,10 @@ export interface Lesson {
   slug: string;
   description: string;
   video_url: string;
-  video_provider: "youtube" | "vimeo" | "direct" | "external";
+  video_provider: VideoProvider;
+  video_source_type?: VideoSourceType;
+  video_id?: string;
+  processing_status?: VideoProcessingStatus;
   duration_minutes: number;
   content_notes?: string | null;
   resources: LessonResource[];

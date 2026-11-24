@@ -409,8 +409,9 @@ export async function createLesson(
     const res = await pool.query(
       `INSERT INTO public.lessons (
         course_id, title, slug, description, video_url, video_provider,
+        video_source_type, video_id, processing_status,
         duration_minutes, content_notes, resources, is_published, order_index
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
       RETURNING *`,
       [
         input.course_id,
@@ -419,6 +420,9 @@ export async function createLesson(
         input.description || "",
         input.video_url,
         input.video_provider || "youtube",
+        input.video_source_type || "url",
+        input.video_id || "",
+        input.processing_status || "ready",
         input.duration_minutes || 0,
         input.content_notes || "",
         JSON.stringify(input.resources || []),
