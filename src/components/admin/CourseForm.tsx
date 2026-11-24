@@ -4,8 +4,9 @@ import { useFormState, useFormStatus } from "react-dom";
 import Link from "next/link";
 import { Course, Category, Level } from "@/types/database";
 import { saveCourseAction } from "@/lib/actions/courses";
-import { ArrowLeft, Save, AlertCircle, Upload, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, AlertCircle, Upload, Loader2 } from "lucide-react";
 import { useState } from "react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface CourseFormProps {
   course?: Course | null;
@@ -13,7 +14,7 @@ interface CourseFormProps {
   levels: Level[];
 }
 
-function SubmitButton() {
+function SubmitButton({ label, savingLabel }: { label: string; savingLabel: string }) {
   const { pending } = useFormStatus();
   return (
     <button
@@ -22,7 +23,7 @@ function SubmitButton() {
       className="inline-flex items-center gap-2 px-6 py-2.5 rounded-sm bg-ink text-paper-50 font-bold text-xs hover:bg-accent transition-colors disabled:opacity-50 shadow-fine"
     >
       <Save className="w-4 h-4" />
-      <span>{pending ? "جاري الحفظ..." : "حفظ بيانات الكورس"}</span>
+      <span>{pending ? savingLabel : label}</span>
     </button>
   );
 }
@@ -32,6 +33,8 @@ export default function CourseForm({ course, categories, levels }: CourseFormPro
   const [thumbnailUrl, setThumbnailUrl] = useState(course?.thumbnail_url || "");
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const { t, language, dir } = useLanguage();
+  const cf = t.admin.courseForm;
 
   const initialObjectives =
     course?.objectives?.map((o) => o.text).join("\n") || "";
@@ -54,12 +57,12 @@ export default function CourseForm({ course, categories, levels }: CourseFormPro
 
       const json = await res.json();
       if (!res.ok) {
-        setUploadError(json.error || "فشل رفع الصورة");
+        setUploadError(json.error || (language === "en" ? "Failed to upload image" : "فشل رفع الصورة"));
       } else if (json.url) {
         setThumbnailUrl(json.url);
       }
-    } catch (err: any) {
-      setUploadError(err.message || "حدث خطأ أثناء الرفع");
+    } catch {
+      setUploadError(language === "en" ? "Error during image upload" : "خطأ أثناء معالجة رفع الصورة");
     } finally {
       setUploading(false);
     }
@@ -68,6 +71,16 @@ export default function CourseForm({ course, categories, levels }: CourseFormPro
   return (
     <form action={formAction} className="space-y-6">
       {course && <input type="hidden" name="id" value={course.id} />}
+
+      {/* Page Title & Subtitle inside the form */}
+      <div className="pb-2">
+        <h1 className="text-2xl font-black text-ink">
+          {course ? cf.editTitle : cf.newTitle}
+        </h1>
+        <p className="text-xs text-ink-muted mt-1">
+          {cf.subtitle}
+        </p>
+      </div>
 
       {state?.error && (
         <div className="p-4 rounded-sm bg-red-50 border border-red-200 text-red-800 text-xs flex items-center gap-2">
@@ -81,27 +94,27 @@ export default function CourseForm({ course, categories, levels }: CourseFormPro
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           <div className="md:col-span-8">
             <label className="block text-xs font-bold text-ink-soft mb-1.5">
-              عنوان الكورس *
+              {cf.titleAr}
             </label>
             <input
               type="text"
               name="title"
               defaultValue={course?.title || ""}
               required
-              placeholder="مثال: دورة أسرار المحادثة والطلاقة اليومية"
+              placeholder={language === "en" ? "e.g., Master Daily English Conversation & Fluency" : "مثال: دورة أسرار المحادثة والطلاقة اليومية"}
               className="w-full bg-paper-50 border border-paper-border rounded-sm px-3.5 py-2.5 text-xs sm:text-sm text-ink focus:bg-white focus:border-accent"
             />
           </div>
 
           <div className="md:col-span-4">
             <label className="block text-xs font-bold text-ink-soft mb-1.5">
-              المعرّف في الرابط (Slug)
+              {cf.slug}
             </label>
             <input
               type="text"
               name="slug"
               defaultValue={course?.slug || ""}
-              placeholder="اتركه فارغاً للتوليد التلقائي"
+              placeholder={language === "en" ? "Leave blank for auto-generation" : "اتركه فارغاً للتوليد التلقائي"}
               className="w-full bg-paper-50 border border-paper-border rounded-sm px-3.5 py-2.5 text-xs sm:text-sm text-ink focus:bg-white focus:border-accent font-latin ltr-text"
             />
           </div>
@@ -111,7 +124,7 @@ export default function CourseForm({ course, categories, levels }: CourseFormPro
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <div>
             <label className="block text-xs font-bold text-ink-soft mb-1.5">
-              المستوى اللغوي *
+              {cf.level}
             </label>
             <select
               name="level_id"
@@ -121,7 +134,7 @@ export default function CourseForm({ course, categories, levels }: CourseFormPro
             >
               {levels.map((lvl) => (
                 <option key={lvl.id} value={lvl.id}>
-                  {lvl.name_ar} ({lvl.name_en})
+                  {language === "en" ? `${lvl.name_en} (${lvl.name_ar})` : `${lvl.name_ar} (${lvl.name_en})`}
                 </option>
               ))}
             </select>
@@ -129,7 +142,7 @@ export default function CourseForm({ course, categories, levels }: CourseFormPro
 
           <div>
             <label className="block text-xs font-bold text-ink-soft mb-1.5">
-              التصنيف اللغوي *
+              {cf.category}
             </label>
             <select
               name="category_id"
@@ -139,7 +152,7 @@ export default function CourseForm({ course, categories, levels }: CourseFormPro
             >
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
-                  {cat.name_ar} ({cat.name_en})
+                  {language === "en" ? `${cat.name_en} (${cat.name_ar})` : `${cat.name_ar} (${cat.name_en})`}
                 </option>
               ))}
             </select>
@@ -147,7 +160,7 @@ export default function CourseForm({ course, categories, levels }: CourseFormPro
 
           <div>
             <label className="block text-xs font-bold text-ink-soft mb-1.5">
-              المدة التقديرية (بالساعات)
+              {cf.durationHours}
             </label>
             <input
               type="number"
@@ -162,7 +175,7 @@ export default function CourseForm({ course, categories, levels }: CourseFormPro
         {/* Thumbnail URL with Direct Supabase Storage Upload */}
         <div>
           <label className="block text-xs font-bold text-ink-soft mb-1.5">
-            صورة غلاف الكورس (Thumbnail)
+            {cf.thumbnail}
           </label>
           <div className="flex flex-col sm:flex-row gap-3">
             <input
@@ -170,7 +183,7 @@ export default function CourseForm({ course, categories, levels }: CourseFormPro
               name="thumbnail_url"
               value={thumbnailUrl}
               onChange={(e) => setThumbnailUrl(e.target.value)}
-              placeholder="https://... رابط الصورة"
+              placeholder="https://..."
               className="flex-1 bg-paper-50 border border-paper-border rounded-sm px-3.5 py-2.5 text-xs text-ink focus:bg-white focus:border-accent font-latin ltr-text"
             />
 
@@ -178,12 +191,12 @@ export default function CourseForm({ course, categories, levels }: CourseFormPro
               {uploading ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>جاري الرفع...</span>
+                  <span>{cf.uploading}</span>
                 </>
               ) : (
                 <>
                   <Upload className="w-3.5 h-3.5 text-accent" />
-                  <span>رفع صورة لـ Supabase</span>
+                  <span>{cf.uploadThumbnail}</span>
                 </>
               )}
               <input
@@ -204,7 +217,7 @@ export default function CourseForm({ course, categories, levels }: CourseFormPro
             <div className="mt-2.5 flex items-center gap-3 bg-paper-50 p-2 rounded-sm border border-paper-border max-w-sm">
               <img
                 src={thumbnailUrl}
-                alt="معاينة الغلاف"
+                alt="Preview"
                 className="w-16 h-10 object-cover rounded-sm border border-paper-border"
               />
               <span className="text-[11px] text-ink-muted truncate font-latin ltr-text flex-1">
@@ -217,14 +230,14 @@ export default function CourseForm({ course, categories, levels }: CourseFormPro
         {/* Short description */}
         <div>
           <label className="block text-xs font-bold text-ink-soft mb-1.5">
-            نبذة مختصرة (تظهر في بطاقة الكورس) *
+            {cf.shortDesc}
           </label>
           <textarea
             name="short_description"
             defaultValue={course?.short_description || ""}
             rows={2}
             required
-            placeholder="اكتب جملتين إلى ثلاث جمل توضح الفكرة الجوهرية للكورس..."
+            placeholder={language === "en" ? "Write 2-3 concise sentences explaining the core takeaway..." : "اكتب جملتين إلى ثلاث جمل توضح الفكرة الجوهرية للكورس..."}
             className="w-full bg-paper-50 border border-paper-border rounded-sm px-3.5 py-2.5 text-xs sm:text-sm text-ink focus:bg-white focus:border-accent"
           />
         </div>
@@ -232,14 +245,14 @@ export default function CourseForm({ course, categories, levels }: CourseFormPro
         {/* Full description */}
         <div>
           <label className="block text-xs font-bold text-ink-soft mb-1.5">
-            الوصف الشامل للكورس *
+            {cf.desc}
           </label>
           <textarea
             name="description"
             defaultValue={course?.description || ""}
             rows={5}
             required
-            placeholder="شرح مفصل لمنهجية الكورس، لمن هذا الكورس، وما يميز هذا الشرح..."
+            placeholder={language === "en" ? "Detailed explanation of course curriculum, target audience, and methodologies..." : "شرح مفصل لمنهجية الكورس، لمن هذا الكورس، وما يميز هذا الشرح..."}
             className="w-full bg-paper-50 border border-paper-border rounded-sm px-3.5 py-2.5 text-xs sm:text-sm text-ink focus:bg-white focus:border-accent"
           />
         </div>
@@ -247,13 +260,13 @@ export default function CourseForm({ course, categories, levels }: CourseFormPro
         {/* Objectives */}
         <div>
           <label className="block text-xs font-bold text-ink-soft mb-1.5">
-            أهداف الكورس (ماذا سيكتسب الطالب؟) - سطر لكل هدف
+            {cf.objectives}
           </label>
           <textarea
             name="objectives"
             defaultValue={initialObjectives}
             rows={4}
-            placeholder="فهم أزمنة الفعل واستخدامها بعفوية&#10;تجنب الأخطاء الشائعة في النطق&#10;إتقان السؤال والنفي دون ترجمة حرفية"
+            placeholder={cf.objectivesPlaceholder}
             className="w-full bg-paper-50 border border-paper-border rounded-sm px-3.5 py-2.5 text-xs sm:text-sm text-ink focus:bg-white focus:border-accent"
           />
         </div>
@@ -268,7 +281,7 @@ export default function CourseForm({ course, categories, levels }: CourseFormPro
               className="w-4 h-4 text-accent border-paper-border rounded-sm focus:ring-accent"
             />
             <span className="text-xs font-bold text-ink">
-              نشر الكورس للطلاب فور الحفظ (Publish)
+              {cf.isPublished}
             </span>
           </label>
 
@@ -280,7 +293,7 @@ export default function CourseForm({ course, categories, levels }: CourseFormPro
               className="w-4 h-4 text-accent border-paper-border rounded-sm focus:ring-accent"
             />
             <span className="text-xs font-bold text-ink">
-              تمييز الكورس في صدارة الصفحة الرئيسية (Featured)
+              {cf.isFeatured}
             </span>
           </label>
         </div>
@@ -292,9 +305,10 @@ export default function CourseForm({ course, categories, levels }: CourseFormPro
           href="/admin/courses"
           className="text-xs text-ink-muted hover:text-ink font-semibold flex items-center gap-1"
         >
-          <span>إلغاء والعودة لقائمة الكورسات</span>
+          {dir === "rtl" ? <ArrowRight className="w-3.5 h-3.5" /> : <ArrowLeft className="w-3.5 h-3.5" />}
+          <span>{cf.cancel}</span>
         </Link>
-        <SubmitButton />
+        <SubmitButton label={cf.save} savingLabel={cf.saving} />
       </div>
     </form>
   );

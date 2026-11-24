@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import Link from "next/link";
 import { deleteCourseAction, toggleCoursePublishAction } from "@/lib/actions/courses";
 import { Trash2, Edit3, PlayCircle, Eye, EyeOff } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface ActionButtonsProps {
   courseId: string;
@@ -17,6 +18,8 @@ export default function CourseActionButtons({
   isPublished,
 }: ActionButtonsProps) {
   const [isPending, startTransition] = useTransition();
+  const { t } = useLanguage();
+  const cp = t.admin.coursesPage;
 
   function handleTogglePublish() {
     startTransition(async () => {
@@ -25,7 +28,7 @@ export default function CourseActionButtons({
   }
 
   function handleDelete() {
-    if (confirm("هل أنت متأكد من رغبتك في حذف هذا الكورس وجميع دروسه نهائياً؟")) {
+    if (confirm(cp.deleteConfirm)) {
       startTransition(async () => {
         await deleteCourseAction(courseId);
       });
@@ -37,10 +40,10 @@ export default function CourseActionButtons({
       <Link
         href={`/admin/courses/${courseId}/lessons`}
         className="px-2.5 py-1 text-xs font-semibold rounded-sm bg-paper-100 hover:bg-paper-200 text-ink transition-colors flex items-center gap-1"
-        title="إدارة دروس هذا الكورس"
+        title={cp.lessonsBtn}
       >
         <PlayCircle className="w-3.5 h-3.5 text-accent" />
-        <span>الدروس</span>
+        <span>{cp.lessonsBtn}</span>
       </Link>
 
       <button
@@ -51,16 +54,16 @@ export default function CourseActionButtons({
             ? "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-red-50 hover:text-red-700 hover:border-red-200"
             : "bg-amber-50 text-amber-800 border-amber-200 hover:bg-green-50 hover:text-green-800"
         }`}
-        title={isPublished ? "إلغاء النشر (تحويل لمسودة)" : "نشر الكورس للطلاب"}
+        title={isPublished ? "Unpublish" : "Publish"}
       >
         {isPublished ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-        <span>{isPublished ? "منشور" : "مسودة"}</span>
+        <span>{isPublished ? cp.publishedForStudents : cp.draftState}</span>
       </button>
 
       <Link
         href={`/admin/courses/${courseId}/edit`}
         className="p-1.5 text-ink-muted hover:text-ink hover:bg-paper-100 rounded-sm transition-colors"
-        title="تعديل بيانات الكورس"
+        title={cp.editBtn}
       >
         <Edit3 className="w-4 h-4" />
       </Link>
@@ -69,7 +72,7 @@ export default function CourseActionButtons({
         onClick={handleDelete}
         disabled={isPending}
         className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-sm transition-colors"
-        title="حذف الكورس نهائياً"
+        title="Delete"
       >
         <Trash2 className="w-4 h-4" />
       </button>

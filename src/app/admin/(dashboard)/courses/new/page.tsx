@@ -10,16 +10,7 @@ export default async function NewCoursePage() {
   ]);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-black text-ink">
-          إضافة كورس تعليمي جديد
-        </h1>
-        <p className="text-xs text-ink-muted mt-1">
-          أدخل بيانات الكورس الجديد، المستوى والتصنيف. ستتمكن من إضافة الدروس والفيديوهات بعد إنشاء الكورس.
-        </p>
-      </div>
-
+    <div className="max-w-4xl mx-auto">
       <CourseForm categories={categories} levels={levels} />
     </div>
   );

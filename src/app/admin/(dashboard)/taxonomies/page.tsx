@@ -10,16 +10,7 @@ export default async function AdminTaxonomiesPage() {
   ]);
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-black text-ink">
-          إدارة التصنيفات ومستويات اللغة
-        </h1>
-        <p className="text-xs text-ink-muted mt-1">
-          تنظيم مجالات اللغة ومستويات الإطار الأوروبي وتخصيص مسارات الطلاب.
-        </p>
-      </div>
-
+    <div className="max-w-5xl mx-auto">
       <TaxonomyManager categories={categories} levels={levels} />
     </div>
   );

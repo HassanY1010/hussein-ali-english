@@ -30,13 +30,13 @@ export default function InstructorSection({ settings }: InstructorSectionProps) 
               <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-ink shadow-md shadow-ink/10 mb-4 border-2 border-accent/40 shrink-0">
                 <img
                   src="/images/logo.jpg"
-                  alt={settings.instructor_name}
+                  alt={language === "en" ? t.instructor.name : settings.instructor_name}
                   className="w-full h-full object-cover"
                 />
               </div>
 
               <h3 className="text-xl sm:text-2xl font-black text-ink tracking-tight">
-                {settings.instructor_name}
+                {language === "en" ? t.instructor.name : settings.instructor_name}
               </h3>
               <p className="text-xs text-accent font-bold mt-1">
                 {language === "en" ? t.hero.instructorTitle : settings.instructor_title}
@@ -70,7 +70,7 @@ export default function InstructorSection({ settings }: InstructorSectionProps) 
               </h2>
 
               <p className="text-xs sm:text-sm text-ink-soft leading-relaxed">
-                {settings.instructor_bio}
+                {language === "en" ? t.instructor.bio : settings.instructor_bio}
               </p>
 
               {/* Message block */}

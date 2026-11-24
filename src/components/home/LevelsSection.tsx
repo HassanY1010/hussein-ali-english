@@ -55,15 +55,19 @@ export default function LevelsSection({ levels }: LevelsSectionProps) {
                   </span>
                 </div>
 
-                <h3 className="font-bold text-ink text-base mb-0.5 group-hover:text-accent transition-colors">
+                <h3 className="font-bold text-ink text-base mb-1 group-hover:text-accent transition-colors">
                   {language === "en" ? level.name_en : level.name_ar}
                 </h3>
-                <span className="block text-xs text-ink-muted font-latin mb-2.5 ltr-text">
-                  {language === "en" ? level.name_ar : level.name_en}
-                </span>
+                {language !== "en" && (
+                  <span className="block text-xs text-ink-muted font-latin mb-2.5 ltr-text">
+                    {level.name_en}
+                  </span>
+                )}
 
-                <p className="text-xs text-ink-soft leading-relaxed">
-                  {level.description || "بناء المهارات اللغوية المخصصة لهذه المرحلة."}
+                <p className="text-xs text-ink-soft leading-relaxed mt-1">
+                  {language === "en"
+                    ? (t.levelDescriptions[level.slug] || level.name_en)
+                    : (level.description || t.levelDescriptions[level.slug] || "بناء المهارات اللغوية المخصصة لهذه المرحلة.")}
                 </p>
               </div>
 

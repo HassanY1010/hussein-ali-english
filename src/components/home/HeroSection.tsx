@@ -102,7 +102,7 @@ export default function HeroSection({ settings }: HeroSectionProps) {
                     <span>{t.hero.instructorCard}</span>
                   </span>
                   <h3 className="text-xl sm:text-2xl font-black text-ink tracking-tight">
-                    {settings.instructor_name}
+                    {language === "en" ? t.instructor.name : settings.instructor_name}
                   </h3>
                   <p className="text-xs text-ink-muted font-medium">
                     {language === "en" ? t.hero.instructorTitle : settings.instructor_title}
@@ -112,7 +112,7 @@ export default function HeroSection({ settings }: HeroSectionProps) {
                 <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-ink shadow-md shadow-ink/15 border-2 border-accent/40 shrink-0">
                   <img
                     src="/images/logo.jpg"
-                    alt={settings.instructor_name}
+                    alt={language === "en" ? t.instructor.name : settings.instructor_name}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -128,7 +128,7 @@ export default function HeroSection({ settings }: HeroSectionProps) {
 
                 {/* Bio */}
                 <p className="text-xs text-ink-muted leading-relaxed px-1">
-                  {settings.instructor_bio}
+                  {language === "en" ? t.instructor.bio : settings.instructor_bio}
                 </p>
               </div>
 
