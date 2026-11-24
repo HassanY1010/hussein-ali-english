@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { Course } from "@/types/database";
-import { Clock, PlayCircle, BookOpen, ArrowLeft, ArrowRight, Award } from "lucide-react";
+import { Clock, PlayCircle, BookOpen, ArrowLeft, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface CourseCardProps {
@@ -16,13 +16,13 @@ export default function CourseCard({ course, featured = false }: CourseCardProps
 
   return (
     <article
-      className={`group bg-white border border-blue-100/80 hover:border-blue-400 rounded-2xl overflow-hidden shadow-xs hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300 flex flex-col justify-between ${
+      className={`group bg-white border border-paper-border hover:border-accent/60 rounded-sm overflow-hidden transition-all duration-300 flex flex-col justify-between ${
         featured ? "md:grid md:grid-cols-12 gap-6 lg:gap-8 p-5 sm:p-6 md:p-8" : "p-4 sm:p-5"
       }`}
     >
       {/* Thumbnail */}
       <div
-        className={`relative overflow-hidden rounded-xl bg-slate-100 ${
+        className={`relative overflow-hidden bg-paper-200 rounded-sm ${
           featured ? "md:col-span-6 aspect-[16/10]" : "aspect-[16/10] mb-4"
         }`}
       >
@@ -34,15 +34,14 @@ export default function CourseCard({ course, featured = false }: CourseCardProps
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-700 text-white">
-            <BookOpen className="w-12 h-12 stroke-[1.5]" />
+          <div className="w-full h-full flex items-center justify-center bg-paper-200 text-ink-muted">
+            <BookOpen className="w-12 h-12 stroke-[1.2]" />
           </div>
         )}
 
-        {/* Free Tag Pill */}
-        <div className="absolute top-3 left-3 flex items-center gap-2">
+        <div className="absolute top-3 right-3 flex items-center gap-2">
           {course.is_free && (
-            <span className="px-3 py-1 text-xs font-bold bg-[#0F2942] text-white rounded-full shadow-md">
+            <span className="px-2.5 py-0.5 text-xs font-semibold bg-ink text-paper-50 rounded-sm shadow-fine">
               {t.courses.free}
             </span>
           )}
@@ -50,24 +49,25 @@ export default function CourseCard({ course, featured = false }: CourseCardProps
       </div>
 
       {/* Content */}
-      <div className={`flex flex-col justify-between ${featured ? "md:col-span-6 py-2" : "flex-1"} text-right`}>
+      <div className={`flex flex-col justify-between ${featured ? "md:col-span-6 py-2" : "flex-1"}`}>
         <div>
-          {/* Badges: Level & Certificate matching reference design */}
-          <div className="flex flex-wrap items-center gap-2 mb-3 text-[11px]">
+          {/* Badges */}
+          <div className="flex flex-wrap items-center gap-2 mb-3 text-xs">
             {course.level && (
-              <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/60 font-bold">
-                المستوى : {language === "en" ? course.level.name_en : course.level.name_ar}
+              <span className="px-2 py-0.5 rounded-sm bg-paper-100 text-ink-soft border border-paper-border font-medium">
+                {language === "en" ? course.level.name_en : course.level.name_ar}
               </span>
             )}
-            <span className="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/60 font-semibold flex items-center gap-1">
-              <Award className="w-3 h-3 text-amber-600" />
-              <span>شهادة إتمام</span>
-            </span>
+            {course.category && (
+              <span className="px-2 py-0.5 rounded-sm bg-accent-light text-accent border border-accent-border font-medium">
+                {language === "en" ? course.category.name_en : course.category.name_ar}
+              </span>
+            )}
           </div>
 
           {/* Title */}
           <h3
-            className={`font-black text-[#0F2942] group-hover:text-blue-600 transition-colors leading-snug mb-2 ${
+            className={`font-bold text-ink group-hover:text-accent transition-colors leading-snug mb-2.5 ${
               featured ? "text-xl sm:text-2xl" : "text-base sm:text-lg"
             }`}
           >
@@ -75,41 +75,51 @@ export default function CourseCard({ course, featured = false }: CourseCardProps
           </h3>
 
           {/* Short Description */}
-          <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 mb-4">
+          <p className="text-xs sm:text-sm text-ink-muted leading-relaxed line-clamp-2 mb-4">
             {course.short_description}
           </p>
+
+          {/* Objectives in featured view */}
+          {featured && course.objectives && course.objectives.length > 0 && (
+            <ul className="mb-6 space-y-1.5 text-xs text-ink-soft border-t border-paper-border pt-4">
+              {course.objectives.slice(0, 3).map((obj, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="text-accent font-bold">•</span>
+                  <span>{obj.text}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {/* Footer info & CTA */}
-        <div className="pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs mt-auto">
-          {/* Action Link with blue arrow */}
+        <div className="pt-4 border-t border-paper-border/70 flex items-center justify-between mt-auto">
+          <div className="flex items-center gap-3 sm:gap-4 text-xs text-ink-muted font-latin">
+            {course.lessons_count !== undefined && (
+              <span className="flex items-center gap-1.5 font-medium">
+                <PlayCircle className="w-3.5 h-3.5 text-ink-soft" />
+                <span>{course.lessons_count} {t.courses.lessons}</span>
+              </span>
+            )}
+            {course.duration_hours > 0 && (
+              <span className="flex items-center gap-1.5 font-medium">
+                <Clock className="w-3.5 h-3.5 text-ink-soft" />
+                <span>{course.duration_hours} {t.courses.hours}</span>
+              </span>
+            )}
+          </div>
+
           <Link
             href={`/courses/${course.slug}`}
-            className="text-xs font-bold text-blue-600 group-hover:text-blue-800 inline-flex items-center gap-1.5 transition-colors"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-ink group-hover:text-accent transition-colors"
           >
-            <span>عرض تفاصيل الدورة</span>
+            <span>{t.courses.viewCourse}</span>
             {dir === "rtl" ? (
               <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
             ) : (
               <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
             )}
           </Link>
-
-          {/* Metadata: Duration & Lessons */}
-          <div className="flex items-center gap-3 text-slate-500 font-medium">
-            {course.duration_hours > 0 && (
-              <span className="flex items-center gap-1 font-latin">
-                <Clock className="w-3.5 h-3.5 text-blue-500" />
-                <span>{course.duration_hours} ساعات</span>
-              </span>
-            )}
-            {course.lessons_count !== undefined && (
-              <span className="flex items-center gap-1 font-latin">
-                <PlayCircle className="w-3.5 h-3.5 text-blue-500" />
-                <span>{course.lessons_count} دروس</span>
-              </span>
-            )}
-          </div>
         </div>
       </div>
     </article>
